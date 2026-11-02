@@ -63,3 +63,4 @@ export function detectAI(input) {
 export function detectFileNameAI(filename) {
   return detectAI(filename);
 }
+

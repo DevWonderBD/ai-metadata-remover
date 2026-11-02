@@ -11,3 +11,4 @@ define('DB_PASS', 'your_cpanel_db_password');
 
 // Allowed Origins for CORS (leave '*' for public access, or specify your domain)
 define('ALLOWED_ORIGIN', '*');
+

@@ -51,10 +51,10 @@ try {
         'status' => 'fallback',
         'message' => 'Database connection unavailable',
         'data' => [
-            'total_visits' => 1250,
-            'unique_visitors' => 980,
-            'images_cleaned' => 5420,
-            'ai_detected_count' => 3810,
+            'total_visits' => 0,
+            'unique_visitors' => 0,
+            'images_cleaned' => 0,
+            'ai_detected_count' => 0,
         ]
     ]);
     exit;
@@ -129,3 +129,4 @@ if ($method === 'POST') {
     }
     exit;
 }
+

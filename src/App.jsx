@@ -1,8 +1,28 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import confetti from 'canvas-confetti';
+import { 
+  ShieldCheck, 
+  Sparkles, 
+  Download, 
+  Copy, 
+  Trash2, 
+  CheckCircle2, 
+  AlertCircle, 
+  FolderDown, 
+  RefreshCw, 
+  ChevronDown, 
+  ChevronUp, 
+  FileCheck,
+  Star,
+  ExternalLink,
+  Laptop
+} from 'lucide-react';
+
 import { cleanBytes } from './core/stripper';
-import { detectAI, detectFileNameAI } from './core/detectAI';
+import { detectFileNameAI } from './core/detectAI';
 import { makeZip } from './core/zip';
 import { fetchCurrentStats, recordVisit, recordCleanedImages, syncOfflineQueue } from './services/statsService';
+import devWonderLogo from './assets/dev-wonder-logo.png';
 import './App.css';
 
 const SUPPORTED_EXT_RE = /\.(jpe?g|png|webp|gif|avif|heic|heif|bmp|tiff?)$/i;
@@ -22,12 +42,16 @@ export default function App() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
-  // Stats state
+  // Live Stats state (fetched from server or updated live)
   const [stats, setStats] = useState({
-    images_cleaned: 5420,
-    ai_detected_count: 3810,
-    total_visits: 1250,
+    images_cleaned: 0,
+    ai_detected_count: 0,
+    total_visits: 0,
   });
+
+  // PWA install prompt state
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   // Interactive filename tester state
   const [testFileName, setTestFileName] = useState('ChatGPT Image Oct 14.png');
@@ -35,12 +59,41 @@ export default function App() {
 
   const fileInputRef = useRef(null);
 
-  // Initialize stats, record visit, and setup offline sync
+  // Initialize stats, record visit, and setup PWA install handler
   useEffect(() => {
     fetchCurrentStats().then(setStats);
     recordVisit();
     syncOfflineQueue();
+
+    // Listen for PWA install prompt
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
   }, []);
+
+  const handleInstallClick = async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setInstallPrompt(null);
+        setIsInstalled(true);
+      }
+    } else {
+      alert("Install AI Metadata Remover App:\n\n• On Chrome/Edge (Desktop): Click the Install icon on the right side of the URL address bar.\n• On iPhone/iPad (Safari): Tap the Share button below and tap 'Add to Home Screen'.\n• On Android (Chrome): Tap the 3 dots menu and select 'Install app' or 'Add to Home screen'.");
+    }
+  };
 
   // Window-level clipboard paste listener (Ctrl+V / Cmd+V)
   useEffect(() => {
@@ -127,6 +180,19 @@ export default function App() {
           images_cleaned: prev.images_cleaned + 1,
           ai_detected_count: prev.ai_detected_count + (aiCount > 0 ? 1 : 0),
         }));
+
+        // Trigger confetti celebration when last queued item finishes
+        const remaining = items.filter(it => it.status === 'queued');
+        if (remaining.length <= 1) {
+          try {
+            confetti({
+              particleCount: 50,
+              spread: 60,
+              origin: { y: 0.7 },
+              colors: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6']
+            });
+          } catch (e) {}
+        }
 
       } catch (err) {
         if (!isMounted) return;
@@ -219,33 +285,29 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Navigation */}
+      {/* Top Navbar */}
       <header className="navbar">
-        <div className="brand">
-          <div className="brand-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </div>
-          <span>DevWonder</span>
-        </div>
+        <a href="https://www.devwonderbd.com" target="_blank" rel="noopener noreferrer" className="brand">
+          <img src={devWonderLogo} alt="Dev Wonder" className="brand-logo" />
+          <span className="brand-text">Dev Wonder</span>
+        </a>
         <div className="nav-actions">
-          <a href="https://github.com/DevWonderBD/ai-metadata-remover" target="_blank" rel="noopener noreferrer" className="github-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-            </svg>
-            <span>Star on GitHub</span>
-          </a>
+          <button 
+            type="button" 
+            onClick={handleInstallClick} 
+            className="install-app-btn"
+            title="Install app to your device for offline use"
+          >
+            <Download size={16} />
+            <span>{isInstalled ? 'App Installed' : 'Install App'}</span>
+          </button>
         </div>
       </header>
 
       {/* Hero */}
       <section className="hero">
         <div className="hero-pill">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
+          <ShieldCheck size={16} />
           <span>100% Client-Side: Your images never leave your browser</span>
         </div>
         <h1>AI Metadata Remover</h1>
@@ -293,17 +355,14 @@ export default function App() {
             e.target.value = '';
           }}
         />
-        <div className="drop-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
+        <div className="drop-icon-wrap">
+          <FolderDown size={28} />
         </div>
-        <div className="drop-title">Drag & drop images here, or click to browse</div>
+        <div className="drop-title">Drag & drop your images here, or click to browse</div>
         <div className="drop-desc">Supports JPG, PNG, WebP, HEIC, AVIF, and more with zero quality loss.</div>
         <button type="button" className="drop-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-          Select Images
+          <Sparkles size={16} />
+          <span>Select Images</span>
         </button>
         <div className="paste-hint">
           or press <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> anywhere to paste from clipboard
@@ -344,13 +403,20 @@ export default function App() {
       {items.length > 0 && (
         <div className="batch-bar">
           <div className="batch-stats">
-            <strong>{doneCount}</strong> of {items.length} image{items.length > 1 ? 's' : ''} cleaned
-            {pendingCount > 0 && ` · processing ${pendingCount} more…`}
+            <CheckCircle2 size={18} color="var(--success)" />
+            <span>
+              <strong>{doneCount}</strong> of {items.length} image{items.length > 1 ? 's' : ''} cleaned
+              {pendingCount > 0 && ` · processing ${pendingCount} more…`}
+            </span>
           </div>
           <div className="batch-actions">
-            <button className="btn-secondary" onClick={handleClearAll}>Start over</button>
+            <button className="btn-secondary" onClick={handleClearAll}>
+              <RefreshCw size={14} />
+              <span>Start over</span>
+            </button>
             <button className="btn-primary" disabled={doneCount === 0 || pendingCount > 0} onClick={handleDownloadAll}>
-              Download All (.ZIP)
+              <Download size={16} />
+              <span>Download All (.ZIP)</span>
             </button>
           </div>
         </div>
@@ -366,11 +432,13 @@ export default function App() {
           return (
             <div key={it.id} className="image-card">
               <div className="image-row-main">
-                <img 
-                  className="image-thumb" 
-                  src={it.url || URL.createObjectURL(it.file)} 
-                  alt="" 
-                />
+                <div className="image-thumb-wrap">
+                  <img 
+                    className="image-thumb" 
+                    src={it.url || URL.createObjectURL(it.file)} 
+                    alt="" 
+                  />
+                </div>
                 <div className="image-info">
                   <div className="image-name">{outName}</div>
                   <div className="image-meta-text">
@@ -383,7 +451,10 @@ export default function App() {
                     {it.status === 'done' && (
                       <>
                         {aiCount > 0 ? (
-                          <span className="tag-badge ai">AI Traces Found ({aiCount})</span>
+                          <span className="tag-badge ai">
+                            <Sparkles size={12} />
+                            AI Traces Found ({aiCount})
+                          </span>
                         ) : (
                           <span className="tag-badge">No AI Traces</span>
                         )}
@@ -391,12 +462,18 @@ export default function App() {
                           {it.out.removed.length} item{it.out.removed.length === 1 ? '' : 's'} removed
                         </span>
                         {it.out.verified && (
-                          <span className="tag-badge clean">✓ Clean</span>
+                          <span className="tag-badge clean">
+                            <CheckCircle2 size={12} />
+                            Clean
+                          </span>
                         )}
                       </>
                     )}
                     {it.status === 'error' && (
-                      <span className="tag-badge error">{it.error}</span>
+                      <span className="tag-badge error">
+                        <AlertCircle size={12} />
+                        {it.error}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -408,13 +485,15 @@ export default function App() {
                         className="action-btn-sm" 
                         onClick={() => setItems(prev => prev.map(x => x.id === it.id ? { ...x, open: !x.open } : x))}
                       >
-                        {it.open ? 'Hide details' : 'Inspect'}
+                        {it.open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        <span>{it.open ? 'Hide' : 'Inspect'}</span>
                       </button>
                       <button 
                         className="action-btn-sm" 
                         onClick={() => handleCopy(it)}
                       >
-                        {copiedId === it.id ? 'Copied!' : 'Copy'}
+                        <Copy size={14} />
+                        <span>{copiedId === it.id ? 'Copied!' : 'Copy'}</span>
                       </button>
                       <a 
                         className="action-btn-sm" 
@@ -422,7 +501,8 @@ export default function App() {
                         href={it.url} 
                         download={outName}
                       >
-                        Download
+                        <Download size={14} />
+                        <span>Download</span>
                       </a>
                     </>
                   )}
@@ -431,10 +511,7 @@ export default function App() {
                     title="Remove"
                     onClick={() => removeItem(it.id)}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="6"/>
-                    </svg>
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
@@ -566,7 +643,7 @@ export default function App() {
                 onClick={() => setFaqOpen(faqOpen === idx ? null : idx)}
               >
                 <span>{item.q}</span>
-                <span>{faqOpen === idx ? '−' : '+'}</span>
+                {faqOpen === idx ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </button>
               {faqOpen === idx && (
                 <div className="faq-answer">{item.a}</div>
@@ -579,12 +656,32 @@ export default function App() {
       {/* Footer */}
       <footer className="footer">
         <div>
-          An open-source initiative by <a href="https://github.com/DevWonderBD" target="_blank" rel="noopener noreferrer"><strong>DevWonder</strong></a>
+          An open source initiative by{' '}
+          <a href="https://www.devwonderbd.com" target="_blank" rel="noopener noreferrer" className="footer-brand-link">
+            Dev Wonder
+          </a>
         </div>
-        <div className="footer-links">
-          <a href="https://github.com/DevWonderBD/ai-metadata-remover" target="_blank" rel="noopener noreferrer">GitHub</a>
-          <a href="https://github.com/DevWonderBD/ai-metadata-remover/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
-          <a href="https://github.com/DevWonderBD/ai-metadata-remover/issues" target="_blank" rel="noopener noreferrer">Report Issue</a>
+        <div className="footer-right">
+          <a 
+            href="https://github.com/DevWonderBD/ai-metadata-remover" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="footer-github-btn"
+          >
+            <Star size={14} fill="currentColor" />
+            <span>Star on GitHub</span>
+          </a>
+          <div className="footer-nav">
+            <a href="https://github.com/DevWonderBD/ai-metadata-remover" target="_blank" rel="noopener noreferrer">
+              GitHub
+            </a>
+            <a href="https://github.com/DevWonderBD/ai-metadata-remover/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
+              MIT License
+            </a>
+            <a href="https://github.com/DevWonderBD/ai-metadata-remover/issues" target="_blank" rel="noopener noreferrer">
+              Report Issue
+            </a>
+          </div>
         </div>
       </footer>
     </div>

@@ -1,6 +1,6 @@
 # Contributing to AI Metadata Remover
 
-Thank you for your interest in contributing to **AI Metadata Remover**, an open-source initiative by [DevWonder](https://github.com/DevWonderBD)! We welcome contributions from developers, designers, and privacy advocates around the world.
+Thank you for your interest in contributing to **AI Metadata Remover**, an open-source initiative by [Dev Wonder](https://www.devwonderbd.com)! We welcome contributions from developers, designers, and privacy advocates around the world.
 
 ## Code of Conduct
 
@@ -57,3 +57,4 @@ We strictly adhere to [Conventional Commits](https://www.conventionalcommits.org
 - Push your branch to your fork.
 - Open a Pull Request pointing to the `main` branch.
 - Fill out the PR template thoroughly. Maintainers will review your PR promptly!
+

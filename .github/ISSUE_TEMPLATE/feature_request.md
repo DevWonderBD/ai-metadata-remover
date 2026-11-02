@@ -20,3 +20,4 @@ Confirm whether this feature operates 100% on the client-side without compromisi
 
 **Additional context**
 Add any other context, mockups, or screenshots about the feature request here.
+

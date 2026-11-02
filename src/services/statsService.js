@@ -23,10 +23,10 @@ export async function fetchCurrentStats() {
 
 export function getDefaultStats() {
   return {
-    total_visits: 1250,
-    unique_visitors: 980,
-    images_cleaned: 5420,
-    ai_detected_count: 3810,
+    total_visits: 0,
+    unique_visitors: 0,
+    images_cleaned: 0,
+    ai_detected_count: 0,
   };
 }
 
@@ -137,3 +137,4 @@ if (typeof window !== 'undefined') {
     syncOfflineQueue();
   });
 }
+

@@ -23,3 +23,4 @@ If you believe you have discovered a vulnerability (such as a metadata leakage v
    - Any potential impact or suggested mitigations.
 
 We will acknowledge receipt within 48 hours and work on a resolution promptly. Thank you for helping keep our community and users secure.
+

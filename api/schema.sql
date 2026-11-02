@@ -15,3 +15,4 @@ INSERT INTO `site_stats` (`stat_key`, `stat_value`) VALUES
   ('images_cleaned', 0),
   ('ai_detected_count', 0)
 ON DUPLICATE KEY UPDATE `stat_key` = `stat_key`;
+

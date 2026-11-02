@@ -32,4 +32,5 @@ This Code of Conduct applies within all community spaces, and also applies when 
 
 ## Contact
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leadership at **hello@devwonder.com** or via [DevWonder](https://github.com/DevWonderBD). All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leadership at **hello@devwonder.com** or via [Dev Wonder](https://www.devwonderbd.com). All complaints will be reviewed and investigated promptly and fairly.
+

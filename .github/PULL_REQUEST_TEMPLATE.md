@@ -16,3 +16,4 @@ Fixes #(issue number)
 - [ ] All image processing strictly remains 100% client-side (no image data sent to any server)
 - [ ] I have commented my code, particularly in hard-to-understand binary parsing areas
 - [ ] The build passes cleanly with `npm run build`
+

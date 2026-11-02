@@ -9,7 +9,6 @@
 [![Vite](https://img.shields.io/badge/Vite-8.x-646cff.svg?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![PWA Ready](https://img.shields.io/badge/PWA-Offline%20Ready-success.svg)](https://web.dev/progressive-web-apps/)
 [![Zero Uploads](https://img.shields.io/badge/Privacy-100%25%20Client--Side-green.svg)](#privacy-guarantee)
-[![cPanel Compatible](https://img.shields.io/badge/Hosting-cPanel%20%2F%20Static-orange.svg)](CPANEL-DEPLOYMENT.md)
 
 [Live Demo](https://github.com/DevWonderBD/ai-metadata-remover) · [Report Bug](https://github.com/DevWonderBD/ai-metadata-remover/issues) · [Request Feature](https://github.com/DevWonderBD/ai-metadata-remover/issues)
 
@@ -91,16 +90,13 @@ The optimized, production-ready static assets are output to the `dist/` director
 
 ---
 
-## 🌐 cPanel & Production Deployment
+## 🌐 Production Deployment
 
-Because the React app compiles into static HTML, CSS, and JS, **no Node.js server is required on your hosting provider**.
+Because the React app compiles into static HTML, CSS, and JS, it can be hosted on any web server, CDN, or static hosting provider (Vercel, Netlify, Cloudflare Pages, GitHub Pages, or traditional web hosting).
 
 1. Run `npm run build` locally.
-2. Upload the contents of `dist/` to your cPanel `public_html/`.
-3. Import `api/schema.sql` into phpMyAdmin.
-4. Copy `api/config.example.php` to `api/config.php` and configure database credentials.
-
-👉 For complete step-by-step instructions, see our [cPanel Deployment Guide](CPANEL-DEPLOYMENT.md).
+2. Upload the contents of `dist/` to your web server root (e.g. `public_html/`).
+3. If using the optional stats counter, import `api/schema.sql` into MySQL and configure `api/config.php`.
 
 ---
 
@@ -119,4 +115,4 @@ docs(scope): update documentation
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE) © 2026 [DevWonder](https://github.com/DevWonderBD).
+This project is licensed under the [MIT License](LICENSE) © 2026 [Dev Wonder](https://www.devwonderbd.com).
