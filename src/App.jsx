@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   ShieldCheck, 
-  Sparkles, 
   Download, 
   Copy, 
   Trash2, 
@@ -12,17 +11,17 @@ import {
   RefreshCw, 
   ChevronDown, 
   ChevronUp, 
-  FileCheck,
   Star,
-  ExternalLink,
-  Laptop
+  Plus,
+  Layers,
+  Sparkles
 } from 'lucide-react';
 
-import { cleanBytes } from './core/stripper';
-import { detectFileNameAI } from './core/detectAI';
-import { makeZip } from './core/zip';
-import { fetchCurrentStats, recordVisit, recordCleanedImages, syncOfflineQueue } from './services/statsService';
-import devWonderLogo from './assets/dev-wonder-logo.png';
+import { cleanBytes } from './core/stripper.js';
+import { detectFileNameAI } from './core/detectAI.js';
+import { makeZip } from './core/zip.js';
+import { fetchCurrentStats, recordVisit, recordCleanedImages, syncOfflineQueue } from './services/statsService.js';
+import devWonderEmblem from './assets/dev-wonder-logo-clean.png';
 import './App.css';
 
 const SUPPORTED_EXT_RE = /\.(jpe?g|png|webp|gif|avif|heic|heif|bmp|tiff?)$/i;
@@ -40,9 +39,11 @@ export default function App() {
   const [unique, setUnique] = useState(false);
   const [nameMode, setNameMode] = useState('suffix'); // 'suffix' | 'keep' | 'rename'
   const [isDragOver, setIsDragOver] = useState(false);
+  const [recentUpload, setRecentUpload] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [toasts, setToasts] = useState([]);
 
-  // Live Stats state (fetched from server or updated live)
+  // Live Stats state
   const [stats, setStats] = useState({
     images_cleaned: 0,
     ai_detected_count: 0,
@@ -58,6 +59,16 @@ export default function App() {
   const [faqOpen, setFaqOpen] = useState(null);
 
   const fileInputRef = useRef(null);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
+  const showToast = useCallback((message, type = 'info') => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3800);
+  }, []);
 
   // Initialize stats, record visit, and setup PWA install handler
   useEffect(() => {
@@ -65,7 +76,6 @@ export default function App() {
     recordVisit();
     syncOfflineQueue();
 
-    // Listen for PWA install prompt
     const handleBeforeInstall = (e) => {
       e.preventDefault();
       setInstallPrompt(e);
@@ -75,12 +85,13 @@ export default function App() {
     window.addEventListener('appinstalled', () => {
       setIsInstalled(true);
       setInstallPrompt(null);
+      showToast('App installed to your device successfully!', 'success');
     });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
-  }, []);
+  }, [showToast]);
 
   const handleInstallClick = async () => {
     if (installPrompt) {
@@ -91,9 +102,102 @@ export default function App() {
         setIsInstalled(true);
       }
     } else {
-      alert("Install AI Metadata Remover App:\n\n• On Chrome/Edge (Desktop): Click the Install icon on the right side of the URL address bar.\n• On iPhone/iPad (Safari): Tap the Share button below and tap 'Add to Home Screen'.\n• On Android (Chrome): Tap the 3 dots menu and select 'Install app' or 'Add to Home screen'.");
+      alert("Install Dev Wonder AI Metadata Remover:\n\n• On Desktop (Chrome/Brave/Edge): Click the Install icon in your browser URL bar.\n• On iPhone/iPad (Safari): Tap the Share button at bottom and choose 'Add to Home Screen'.\n• On Android (Chrome): Tap the 3-dots menu and tap 'Install app'.");
     }
   };
+
+  // Process a single item asynchronously without effect unmount cancellation
+  const processSingleItem = useCallback(async (item, options) => {
+    setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'processing' } : x));
+
+    try {
+      const u8 = new Uint8Array(await item.file.arrayBuffer());
+      const cleaned = await cleanBytes(u8, item.file, options);
+      const blobUrl = URL.createObjectURL(new Blob([cleaned.bytes], { type: cleaned.mime }));
+
+      setItems(prev => prev.map(x => {
+        if (x.id === item.id) {
+          return {
+            ...x,
+            status: 'done',
+            out: cleaned,
+            url: blobUrl,
+          };
+        }
+        return x;
+      }));
+
+      // Telemetry update
+      const aiCount = (cleaned.ai ? cleaned.ai.length : 0) + (item.nameAI.length ? 1 : 0);
+      recordCleanedImages(1, aiCount);
+      setStats(prev => ({
+        ...prev,
+        images_cleaned: prev.images_cleaned + 1,
+        ai_detected_count: prev.ai_detected_count + (aiCount > 0 ? 1 : 0),
+      }));
+
+      showToast(`✓ Cleaned ${item.file.name}`, 'success');
+
+      // Check if all are done, trigger celebration
+      setTimeout(() => {
+        const current = itemsRef.current;
+        const allDone = current.length > 0 && current.every(x => x.status === 'done' || x.status === 'error');
+        if (allDone) {
+          confetti({
+            particleCount: 50,
+            spread: 65,
+            origin: { y: 0.65 },
+            colors: ['#34cc5f', '#34b8c1', '#10b981', '#6366f1']
+          });
+        }
+      }, 200);
+
+    } catch (err) {
+      console.error('Processing error:', err);
+      setItems(prev => prev.map(x => {
+        if (x.id === item.id) {
+          return {
+            ...x,
+            status: 'error',
+            error: err.message || 'Processing failed',
+          };
+        }
+        return x;
+      }));
+      showToast(`Error processing ${item.file.name}`, 'error');
+    }
+  }, [showToast]);
+
+  const addFiles = useCallback((fileList) => {
+    const newItems = [];
+    for (const f of fileList) {
+      if (f.type.startsWith('image/') || SUPPORTED_EXT_RE.test(f.name)) {
+        newItems.push({
+          id: Math.random().toString(36).substring(2, 9),
+          file: f,
+          status: 'queued',
+          nameAI: detectFileNameAI(f.name),
+          open: false,
+          out: null,
+          url: null,
+          error: null,
+        });
+      }
+    }
+    if (!newItems.length) return;
+
+    setItems(prev => [...prev, ...newItems]);
+    setRecentUpload(true);
+    setTimeout(() => setRecentUpload(false), 1400);
+
+    showToast(`📥 Received ${newItems.length} image${newItems.length > 1 ? 's' : ''}! Cleaning...`, 'info');
+
+    // Run processing on all new items immediately
+    const currentOpts = { keepICC, unique };
+    newItems.forEach(it => {
+      processSingleItem(it, currentOpts);
+    });
+  }, [keepICC, unique, processSingleItem, showToast]);
 
   // Window-level clipboard paste listener (Ctrl+V / Cmd+V)
   useEffect(() => {
@@ -120,99 +224,22 @@ export default function App() {
 
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, [keepICC, unique]);
+  }, [addFiles]);
 
-  const addFiles = useCallback((fileList) => {
-    const newItems = [];
-    for (const f of fileList) {
-      if (f.type.startsWith('image/') || SUPPORTED_EXT_RE.test(f.name)) {
-        newItems.push({
-          id: Math.random().toString(36).substring(2, 9),
-          file: f,
-          status: 'queued', // queued -> processing -> done -> error
-          nameAI: detectFileNameAI(f.name),
-          open: false,
-          out: null,
-          url: null,
-          error: null,
-        });
-      }
-    }
-    if (newItems.length) {
-      setItems(prev => [...prev, ...newItems]);
-    }
-  }, []);
+  // Handle options change: re-clean existing items
+  const handleKeepICCChange = (checked) => {
+    setKeepICC(checked);
+    items.forEach(it => {
+      processSingleItem(it, { keepICC: checked, unique });
+    });
+  };
 
-  // Process queued items sequentially
-  useEffect(() => {
-    const queued = items.find(it => it.status === 'queued');
-    if (!queued) return;
-
-    let isMounted = true;
-
-    async function processItem() {
-      setItems(prev => prev.map(it => it.id === queued.id ? { ...it, status: 'processing' } : it));
-
-      try {
-        const u8 = new Uint8Array(await queued.file.arrayBuffer());
-        const cleaned = await cleanBytes(u8, queued.file, { keepICC, unique });
-        const blobUrl = URL.createObjectURL(new Blob([cleaned.bytes], { type: cleaned.mime }));
-
-        if (!isMounted) return;
-
-        setItems(prev => prev.map(it => {
-          if (it.id === queued.id) {
-            return {
-              ...it,
-              status: 'done',
-              out: cleaned,
-              url: blobUrl,
-            };
-          }
-          return it;
-        }));
-
-        // Telemetry update
-        const aiCount = (cleaned.ai ? cleaned.ai.length : 0) + (queued.nameAI.length ? 1 : 0);
-        recordCleanedImages(1, aiCount);
-        setStats(prev => ({
-          ...prev,
-          images_cleaned: prev.images_cleaned + 1,
-          ai_detected_count: prev.ai_detected_count + (aiCount > 0 ? 1 : 0),
-        }));
-
-        // Trigger confetti celebration when last queued item finishes
-        const remaining = items.filter(it => it.status === 'queued');
-        if (remaining.length <= 1) {
-          try {
-            confetti({
-              particleCount: 50,
-              spread: 60,
-              origin: { y: 0.7 },
-              colors: ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6']
-            });
-          } catch (e) {}
-        }
-
-      } catch (err) {
-        if (!isMounted) return;
-        setItems(prev => prev.map(it => {
-          if (it.id === queued.id) {
-            return {
-              ...it,
-              status: 'error',
-              error: err.message || 'Could not process this image',
-            };
-          }
-          return it;
-        }));
-      }
-    }
-
-    processItem();
-
-    return () => { isMounted = false; };
-  }, [items, keepICC, unique]);
+  const handleUniqueChange = (checked) => {
+    setUnique(checked);
+    items.forEach(it => {
+      processSingleItem(it, { keepICC, unique: checked });
+    });
+  };
 
   const generateOutputName = (item, index, doneList) => {
     if (!item.out) return item.file.name;
@@ -241,9 +268,10 @@ export default function App() {
       }
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
       setCopiedId(item.id);
+      showToast('📋 Copied cleaned image to clipboard!', 'success');
       setTimeout(() => setCopiedId(null), 2000);
     } catch (e) {
-      alert('Copy to clipboard failed. Please use download button instead.');
+      alert('Copy to clipboard failed in your browser. Please use the Download button.');
     }
   };
 
@@ -261,12 +289,14 @@ export default function App() {
     link.href = URL.createObjectURL(zipBlob);
     link.download = 'cleaned-images-devwonder.zip';
     link.click();
+    showToast(`📦 Downloaded ${filesForZip.length} cleaned images in ZIP!`, 'success');
     setTimeout(() => URL.revokeObjectURL(link.href), 5000);
   };
 
   const handleClearAll = () => {
     items.forEach(it => it.url && URL.revokeObjectURL(it.url));
     setItems([]);
+    showToast('Cleaned list reset', 'info');
   };
 
   const removeItem = (id) => {
@@ -278,18 +308,35 @@ export default function App() {
   };
 
   const doneCount = items.filter(it => it.status === 'done').length;
-  const pendingCount = items.filter(it => it.status === 'queued' || it.status === 'processing').length;
+  const processingCount = items.filter(it => it.status === 'processing' || it.status === 'queued').length;
 
   // Filename AI tester logic
   const detectedTestAI = detectFileNameAI(testFileName);
 
   return (
     <div className="app-container">
+      {/* Toast Notifications Container */}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type}`}>
+            {t.type === 'success' && <CheckCircle2 size={16} color="#34cc5f" />}
+            {t.type === 'info' && <FolderDown size={16} color="#06b6d4" />}
+            {t.type === 'error' && <AlertCircle size={16} color="#ef4444" />}
+            <span>{t.message}</span>
+          </div>
+        ))}
+      </div>
+
       {/* Top Navbar */}
       <header className="navbar">
         <a href="https://www.devwonderbd.com" target="_blank" rel="noopener noreferrer" className="brand">
-          <img src={devWonderLogo} alt="Dev Wonder" className="brand-logo" />
-          <span className="brand-text">Dev Wonder</span>
+          <div className="brand-emblem-wrap">
+            <img src={devWonderEmblem} alt="Dev Wonder Emblem" className="brand-logo" />
+          </div>
+          <div className="brand-info">
+            <span className="brand-title">Dev Wonder</span>
+            <span className="brand-tagline">Simplifying Tech</span>
+          </div>
         </a>
         <div className="nav-actions">
           <button 
@@ -298,7 +345,7 @@ export default function App() {
             className="install-app-btn"
             title="Install app to your device for offline use"
           >
-            <Download size={16} />
+            <Download size={15} />
             <span>{isInstalled ? 'App Installed' : 'Install App'}</span>
           </button>
         </div>
@@ -307,7 +354,7 @@ export default function App() {
       {/* Hero */}
       <section className="hero">
         <div className="hero-pill">
-          <ShieldCheck size={16} />
+          <ShieldCheck size={15} />
           <span>100% Client-Side: Your images never leave your browser</span>
         </div>
         <h1>AI Metadata Remover</h1>
@@ -322,7 +369,7 @@ export default function App() {
             <span><strong>{stats.images_cleaned.toLocaleString()}</strong> images cleaned</span>
           </div>
           <div className="stat-item">
-            <span className="stat-dot amber"></span>
+            <span className="stat-dot cyan"></span>
             <span><strong>{stats.ai_detected_count.toLocaleString()}</strong> AI traces stripped</span>
           </div>
           <div className="stat-item">
@@ -332,9 +379,9 @@ export default function App() {
         </div>
       </section>
 
-      {/* Main Dropzone */}
+      {/* Dynamic Dropzone: Collapses into sleek compact mode when items exist */}
       <div 
-        className={`dropzone ${isDragOver ? 'active' : ''}`}
+        className={`dropzone ${items.length > 0 ? 'compact' : ''} ${isDragOver ? 'active' : ''} ${recentUpload ? 'recent-upload' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={(e) => {
@@ -355,18 +402,38 @@ export default function App() {
             e.target.value = '';
           }}
         />
-        <div className="drop-icon-wrap">
-          <FolderDown size={28} />
-        </div>
-        <div className="drop-title">Drag & drop your images here, or click to browse</div>
-        <div className="drop-desc">Supports JPG, PNG, WebP, HEIC, AVIF, and more with zero quality loss.</div>
-        <button type="button" className="drop-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-          <Sparkles size={16} />
-          <span>Select Images</span>
-        </button>
-        <div className="paste-hint">
-          or press <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> anywhere to paste from clipboard
-        </div>
+
+        {items.length === 0 ? (
+          <>
+            <div className="drop-icon-wrap">
+              <FolderDown size={28} />
+            </div>
+            <div className="drop-title">Drag & drop your images here, or click to browse</div>
+            <div className="drop-desc">Supports JPG, PNG, WebP, HEIC, AVIF, and more with zero quality loss.</div>
+            <button type="button" className="drop-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+              <Plus size={16} />
+              <span>Select Images</span>
+            </button>
+            <div className="paste-hint">
+              or press <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> anywhere to paste from clipboard
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="compact-content">
+              <div className="compact-icon">
+                <Plus size={20} />
+              </div>
+              <div className="compact-text">
+                <h4>Drop more images here to clean</h4>
+                <p>or click to browse from device (Ctrl+V supported)</p>
+              </div>
+            </div>
+            <button type="button" className="compact-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+              + Add More
+            </button>
+          </>
+        )}
       </div>
 
       {/* Options Bar */}
@@ -376,7 +443,7 @@ export default function App() {
             <input 
               type="checkbox" 
               checked={keepICC} 
-              onChange={(e) => setKeepICC(e.target.checked)} 
+              onChange={(e) => handleKeepICCChange(e.target.checked)} 
             />
             <span>Keep original color profile (ICC)</span>
           </label>
@@ -384,7 +451,7 @@ export default function App() {
             <input 
               type="checkbox" 
               checked={unique} 
-              onChange={(e) => setUnique(e.target.checked)} 
+              onChange={(e) => handleUniqueChange(e.target.checked)} 
             />
             <span>Make each image unique <small style={{ color: 'var(--text-subtle)' }}>(imperceptible noise)</small></span>
           </label>
@@ -403,10 +470,10 @@ export default function App() {
       {items.length > 0 && (
         <div className="batch-bar">
           <div className="batch-stats">
-            <CheckCircle2 size={18} color="var(--success)" />
+            <CheckCircle2 size={18} color="#34cc5f" />
             <span>
               <strong>{doneCount}</strong> of {items.length} image{items.length > 1 ? 's' : ''} cleaned
-              {pendingCount > 0 && ` · processing ${pendingCount} more…`}
+              {processingCount > 0 && ` · cleaning ${processingCount} in progress…`}
             </span>
           </div>
           <div className="batch-actions">
@@ -414,15 +481,15 @@ export default function App() {
               <RefreshCw size={14} />
               <span>Start over</span>
             </button>
-            <button className="btn-primary" disabled={doneCount === 0 || pendingCount > 0} onClick={handleDownloadAll}>
-              <Download size={16} />
+            <button className="btn-primary" disabled={doneCount === 0 || processingCount > 0} onClick={handleDownloadAll}>
+              <Download size={15} />
               <span>Download All (.ZIP)</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Image Rows List */}
+      {/* Image Rows List - Directly visible without scrolling */}
       <div className="image-list">
         {items.map((it, idx) => {
           const doneList = items.filter(x => x.status === 'done');
@@ -444,15 +511,21 @@ export default function App() {
                   <div className="image-meta-text">
                     {it.status === 'done' 
                       ? `${formatBytes(it.file.size)} → ${formatBytes(it.out.bytes.length)} · ${it.out.method}`
-                      : `${formatBytes(it.file.size)} · ${it.status === 'processing' ? 'processing…' : 'queued'}`
+                      : `${formatBytes(it.file.size)} · ${it.status === 'processing' ? 'Cleaning metadata…' : 'Queued'}`
                     }
                   </div>
                   <div className="tags-row">
+                    {it.status === 'processing' && (
+                      <span className="tag-badge processing">
+                        <RefreshCw size={11} className="spin" />
+                        Processing...
+                      </span>
+                    )}
                     {it.status === 'done' && (
                       <>
                         {aiCount > 0 ? (
                           <span className="tag-badge ai">
-                            <Sparkles size={12} />
+                            <Sparkles size={11} />
                             AI Traces Found ({aiCount})
                           </span>
                         ) : (
@@ -463,7 +536,7 @@ export default function App() {
                         </span>
                         {it.out.verified && (
                           <span className="tag-badge clean">
-                            <CheckCircle2 size={12} />
+                            <CheckCircle2 size={11} />
                             Clean
                           </span>
                         )}
@@ -471,7 +544,7 @@ export default function App() {
                     )}
                     {it.status === 'error' && (
                       <span className="tag-badge error">
-                        <AlertCircle size={12} />
+                        <AlertCircle size={11} />
                         {it.error}
                       </span>
                     )}
@@ -485,23 +558,23 @@ export default function App() {
                         className="action-btn-sm" 
                         onClick={() => setItems(prev => prev.map(x => x.id === it.id ? { ...x, open: !x.open } : x))}
                       >
-                        {it.open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        {it.open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                         <span>{it.open ? 'Hide' : 'Inspect'}</span>
                       </button>
                       <button 
                         className="action-btn-sm" 
                         onClick={() => handleCopy(it)}
                       >
-                        <Copy size={14} />
+                        <Copy size={13} />
                         <span>{copiedId === it.id ? 'Copied!' : 'Copy'}</span>
                       </button>
                       <a 
                         className="action-btn-sm" 
-                        style={{ background: 'var(--accent)', color: 'white', borderColor: 'var(--accent)' }}
+                        style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', color: '#0c0e14', borderColor: 'transparent', fontWeight: 700 }}
                         href={it.url} 
                         download={outName}
                       >
-                        <Download size={14} />
+                        <Download size={13} />
                         <span>Download</span>
                       </a>
                     </>
@@ -511,7 +584,7 @@ export default function App() {
                     title="Remove"
                     onClick={() => removeItem(it.id)}
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>
@@ -643,7 +716,7 @@ export default function App() {
                 onClick={() => setFaqOpen(faqOpen === idx ? null : idx)}
               >
                 <span>{item.q}</span>
-                {faqOpen === idx ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                {faqOpen === idx ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               {faqOpen === idx && (
                 <div className="faq-answer">{item.a}</div>

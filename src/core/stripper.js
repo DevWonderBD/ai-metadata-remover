@@ -1,4 +1,4 @@
-import { detectAI, findAI, latin1 } from './detectAI';
+import { detectAI, findAI, latin1 } from './detectAI.js';
 
 export const ascii = (u8, start, n) => latin1(u8.subarray(start, start + n));
 
