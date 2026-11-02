@@ -340,9 +340,9 @@ export default function App() {
       <div className="toast-container">
         {toasts.map(t => (
           <div key={t.id} className={`toast ${t.type}`}>
-            {t.type === 'success' && <CheckCircle2 size={16} color="#06b6d4" />}
-            {t.type === 'info' && <FolderDown size={16} color="#38bdf8" />}
-            {t.type === 'error' && <AlertCircle size={16} color="#ef4444" />}
+            {t.type === 'success' && <CheckCircle2 size={16} className="toast-icon success" />}
+            {t.type === 'info' && <FolderDown size={16} className="toast-icon info" />}
+            {t.type === 'error' && <AlertCircle size={16} className="toast-icon error" />}
             <span>{t.message}</span>
           </div>
         ))}

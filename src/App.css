@@ -866,10 +866,10 @@
   line-height: 1.6;
 }
 
-/* Toast Notification */
+/* Toast Notification (Top Placement + Adaptive Dark/Light Mode) */
 .toast-container {
   position: fixed;
-  bottom: 24px;
+  top: 24px;
   right: 24px;
   z-index: 9999;
   display: flex;
@@ -885,13 +885,16 @@
   gap: 10px;
   padding: 12px 18px;
   border-radius: var(--radius-md);
-  background: #181d26;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   font-size: 0.875rem;
   font-weight: 500;
-  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: slideInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Dark mode default */
+  background: rgba(24, 29, 38, 0.95);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .toast.success {
@@ -906,9 +909,65 @@
   border-left: 4px solid #ef4444;
 }
 
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+.toast-icon {
+  flex-shrink: 0;
+}
+
+.toast-icon.success {
+  color: #22d3ee;
+}
+
+.toast-icon.info {
+  color: #38bdf8;
+}
+
+.toast-icon.error {
+  color: #f87171;
+}
+
+/* Light Mode: tracks device system theme */
+@media (prefers-color-scheme: light) {
+  .toast {
+    background: rgba(255, 255, 255, 0.96);
+    color: #0f172a;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  .toast.success {
+    border-left: 4px solid #0891b2;
+  }
+
+  .toast.info {
+    border-left: 4px solid #0284c7;
+  }
+
+  .toast.error {
+    border-left: 4px solid #dc2626;
+  }
+
+  .toast-icon.success {
+    color: #0891b2;
+  }
+
+  .toast-icon.info {
+    color: #0284c7;
+  }
+
+  .toast-icon.error {
+    color: #dc2626;
+  }
+}
+
+@keyframes slideInDown {
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px) scale(0.96); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
 }
 
 /* Footer */
@@ -1074,9 +1133,16 @@
   }
 
   .toast-container {
+    top: 16px;
     left: 16px;
     right: 16px;
-    bottom: 16px;
+    bottom: auto;
+    align-items: center;
+  }
+
+  .toast {
+    width: 100%;
+    max-width: 420px;
   }
 }
 
