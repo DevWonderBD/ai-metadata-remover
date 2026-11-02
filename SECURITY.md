@@ -16,7 +16,7 @@ The **AI Metadata Remover** project takes user privacy and security seriously. B
 If you believe you have discovered a vulnerability (such as a metadata leakage vector, memory issue, or cross-site scripting vulnerability):
 
 1. **Do not disclose the issue publicly** on GitHub issues, pull requests, or forums.
-2. Email the DevWonder security team at: **security@devwonder.com** or open a confidential advisory via GitHub's Security Advisories tab.
+2. Email the DevWonder security team at: **info@devwonderbd.com** or open a confidential advisory via GitHub's Security Advisories tab.
 3. Please include:
    - A detailed description of the vulnerability.
    - Proof-of-concept steps or sample image files to reproduce.
