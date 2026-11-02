@@ -50,9 +50,9 @@ export default function App() {
     total_visits: 0,
   });
 
-  // PWA install prompt state
+  // PWA install prompt & standalone state
   const [installPrompt, setInstallPrompt] = useState(null);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   // FAQ accordion state
   const [faqOpen, setFaqOpen] = useState(null);
@@ -69,8 +69,21 @@ export default function App() {
     }, 3800);
   }, []);
 
-  // Initialize stats, record visit, and setup PWA install handler
+  // Initialize stats, record visit, and setup PWA install & standalone detection
   useEffect(() => {
+    const checkStandalone = () => {
+      const isStand = window.matchMedia('(display-mode: standalone)').matches 
+        || window.navigator.standalone === true 
+        || document.referrer.includes('android-app://');
+      setIsStandalone(Boolean(isStand));
+    };
+
+    checkStandalone();
+    const mql = window.matchMedia('(display-mode: standalone)');
+    if (mql.addEventListener) {
+      mql.addEventListener('change', checkStandalone);
+    }
+
     fetchCurrentStats().then(setStats);
     recordVisit();
     syncOfflineQueue();
@@ -82,13 +95,16 @@ export default function App() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', () => {
-      setIsInstalled(true);
+      setIsStandalone(true);
       setInstallPrompt(null);
       showToast('App installed to your device successfully!', 'success');
     });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      if (mql.removeEventListener) {
+        mql.removeEventListener('change', checkStandalone);
+      }
     };
   }, [showToast]);
 
@@ -98,11 +114,20 @@ export default function App() {
       const { outcome } = await installPrompt.userChoice;
       if (outcome === 'accepted') {
         setInstallPrompt(null);
-        setIsInstalled(true);
+        setIsStandalone(true);
       }
     } else {
       alert("Install Dev Wonder AI Metadata Remover:\n\n• On Desktop (Chrome/Brave/Edge): Click the Install icon in your browser URL bar.\n• On iPhone/iPad (Safari): Tap the Share button at bottom and choose 'Add to Home Screen'.\n• On Android (Chrome): Tap the 3-dots menu and tap 'Install app'.");
     }
+  };
+
+  const handleCheckUpdate = () => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg) reg.update();
+      });
+    }
+    showToast('✓ App is up to date (Latest build ready offline)', 'success');
   };
 
   // Process a single item asynchronously without effect unmount cancellation
@@ -335,15 +360,27 @@ export default function App() {
           </div>
         </a>
         <div className="nav-actions">
-          <button 
-            type="button" 
-            onClick={handleInstallClick} 
-            className="install-app-btn"
-            title="Install app to your device for offline use"
-          >
-            <Download size={14} />
-            <span>{isInstalled ? 'App Installed' : 'Install App'}</span>
-          </button>
+          {isStandalone ? (
+            <button 
+              type="button" 
+              onClick={handleCheckUpdate} 
+              className="app-status-chip"
+              title="Running in installed app mode. Click to check for updates."
+            >
+              <span className="status-pulse-dot"></span>
+              <span>Up to date</span>
+            </button>
+          ) : (
+            <button 
+              type="button" 
+              onClick={handleInstallClick} 
+              className="install-app-btn"
+              title="Install app to your device for 100% offline use"
+            >
+              <Download size={14} />
+              <span>Install App</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -443,8 +480,11 @@ export default function App() {
               onChange={(e) => handleKeepICCChange(e.target.checked)} 
             />
             <div className="option-content">
-              <span className="option-title">Keep original colors</span>
-              <span className="option-desc">Preserves display color profile (recommended)</span>
+              <div className="option-title-row">
+                <span className="option-title">Keep original colors</span>
+                <span className="badge-pill badge-recommended">Recommended</span>
+              </div>
+              <span className="option-desc">Preserves display color profile (ICC)</span>
             </div>
           </label>
 
@@ -455,7 +495,10 @@ export default function App() {
               onChange={(e) => handleUniqueChange(e.target.checked)} 
             />
             <div className="option-content">
-              <span className="option-title">Make each image unique</span>
+              <div className="option-title-row">
+                <span className="option-title">Make each image unique</span>
+                <span className="badge-pill badge-optional">Optional</span>
+              </div>
               <span className="option-desc">Invisible pixel tweaks to alter duplicate file hash</span>
             </div>
           </label>
@@ -692,7 +735,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="footer">
-        <div>
+        <div className="footer-left">
           An open source initiative by{' '}
           <a href="https://www.devwonderbd.com" target="_blank" rel="noopener noreferrer" className="footer-brand-link">
             Dev Wonder
