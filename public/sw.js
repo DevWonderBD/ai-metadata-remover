@@ -32,9 +32,19 @@ self.addEventListener('activate', event => {
   );
 });
 
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', event => {
-  // Do not intercept non-GET requests or API requests
-  if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+  // Do not intercept non-GET requests, API requests, or version.json
+  if (
+    event.request.method !== 'GET' || 
+    event.request.url.includes('/api/') || 
+    event.request.url.includes('version.json')
+  ) {
     return;
   }
 

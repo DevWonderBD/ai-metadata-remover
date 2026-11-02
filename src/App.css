@@ -164,6 +164,40 @@
   }
 }
 
+/* Update Available Alert Status Chip */
+.app-status-chip.update-available {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  animation: pulseUpdateBorder 2.5s infinite;
+}
+
+.app-status-chip.update-available:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  color: #ffffff;
+}
+
+.status-update-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  animation: pulseAmber 1.8s infinite;
+}
+
+@keyframes pulseAmber {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+@keyframes pulseUpdateBorder {
+  0%, 100% { border-color: rgba(245, 158, 11, 0.45); }
+  50% { border-color: rgba(245, 158, 11, 0.9); }
+}
+
 /* Hero Section */
 .hero {
   text-align: center;

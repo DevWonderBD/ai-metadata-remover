@@ -81,6 +81,11 @@ export default function App() {
     showToast(`Switched to ${nextTheme === 'light' ? 'Light' : 'Dark'} mode`, 'info');
   };
 
+  // App version tracking (from package.json define)
+  const currentVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0';
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [remoteVersion, setRemoteVersion] = useState(currentVersion);
+
   // Live Stats state
   const [stats, setStats] = useState({
     images_cleaned: 0,
@@ -184,6 +189,62 @@ export default function App() {
     };
   }, [showToast]);
 
+  // Check for remote/production updates (SW & version.json comparison)
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (!reg) return;
+
+        if (reg.waiting) {
+          setUpdateAvailable(true);
+        }
+
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setUpdateAvailable(true);
+                showToast('⚡ A new update is available for AI Metadata Remover!', 'info');
+              }
+            });
+          }
+        });
+      }).catch(() => {});
+    }
+
+    const checkRemoteVersion = () => {
+      fetch(`/version.json?t=${Date.now()}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && data.version && data.version !== currentVersion) {
+            setUpdateAvailable(true);
+            setRemoteVersion(data.version);
+            showToast(`⚡ Update available: v${data.version}! Click Update to apply.`, 'info');
+          }
+        })
+        .catch(() => {});
+    };
+
+    checkRemoteVersion();
+    const interval = setInterval(checkRemoteVersion, 60000);
+    return () => clearInterval(interval);
+  }, [currentVersion, showToast]);
+
+  const handleApplyUpdate = () => {
+    showToast('🔄 Updating to latest build...', 'info');
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg && reg.waiting) {
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+      });
+    }
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 400);
+  };
+
   const handleInstallClick = async () => {
     if (installPrompt) {
       installPrompt.prompt();
@@ -196,19 +257,10 @@ export default function App() {
         showToast('✓ App installed to your device successfully!', 'success');
       }
     } else if (isInstalled || isStandalone) {
-      showToast('✓ App is already installed! You can launch it from your Desktop / Applications or the icon in your address bar.', 'info');
+      handleCheckUpdate();
     } else {
       setShowInstallModal(true);
     }
-  };
-
-  const handleInstalledClick = () => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration().then(reg => {
-        if (reg) reg.update();
-      });
-    }
-    showToast('✓ AI Metadata Remover is installed on your device (Offline Ready)!', 'success');
   };
 
   const handleCheckUpdate = () => {
@@ -217,7 +269,21 @@ export default function App() {
         if (reg) reg.update();
       });
     }
-    showToast('✓ App is up to date (Latest build ready offline)', 'success');
+
+    fetch(`/version.json?t=${Date.now()}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.version && data.version !== currentVersion) {
+          setUpdateAvailable(true);
+          setRemoteVersion(data.version);
+          showToast(`⚡ New version v${data.version} available! Click Update to apply.`, 'info');
+        } else {
+          showToast(`✓ App is up to date (v${currentVersion}). You are on the latest version.`, 'success');
+        }
+      })
+      .catch(() => {
+        showToast(`✓ App is up to date (v${currentVersion})`, 'success');
+      });
   };
 
   // Process a single item asynchronously without effect unmount cancellation
@@ -461,15 +527,25 @@ export default function App() {
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          {isStandalone || isInstalled ? (
+          {updateAvailable ? (
             <button 
               type="button" 
-              onClick={handleInstalledClick} 
+              onClick={handleApplyUpdate} 
+              className="app-status-chip update-available"
+              title={`New version v${remoteVersion} available. Click to update now!`}
+            >
+              <span className="status-update-dot"></span>
+              <span>Update Available</span>
+            </button>
+          ) : isStandalone || isInstalled ? (
+            <button 
+              type="button" 
+              onClick={handleCheckUpdate} 
               className="app-status-chip"
-              title="App is already installed on this device. Click to check for updates."
+              title={`App is up to date (v${currentVersion}). Click to check for updates.`}
             >
               <span className="status-pulse-dot"></span>
-              <span>App Installed</span>
+              <span>Up to date</span>
             </button>
           ) : (
             <button 
