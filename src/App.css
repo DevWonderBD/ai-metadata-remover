@@ -182,19 +182,19 @@
   padding: 7px 16px;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #050b1a;
+  color: #ffffff;
   background: var(--primary-gradient);
   border: 0;
   border-radius: var(--radius-full);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .topbar__install-btn:hover {
   transform: translateY(-1px);
   filter: brightness(1.08);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
 }
 
 .topbar__install-btn:active {
@@ -344,23 +344,25 @@
 .dropzone__btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 10px 24px;
+  padding: 11px 26px;
   background: var(--primary-gradient);
-  color: #050b1a;
+  color: #ffffff;
   border: 0;
   border-radius: var(--radius-full);
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dropzone__btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   filter: brightness(1.08);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
 }
 
 .dropzone__btn:active {
@@ -643,15 +645,15 @@
 .btn--filled {
   background: var(--primary-gradient);
   border: 0;
-  color: #050b1a;
+  color: #ffffff;
   font-weight: 700;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
 }
 
 .btn--filled:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.08);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
 }
 
 .btn--filled:disabled {
@@ -661,14 +663,16 @@
 
 .btn--accent {
   background: var(--primary-gradient);
-  color: #050b1a;
+  color: #ffffff;
   border: 0;
   font-weight: 700;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
 }
 
 .btn--accent:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
 }
 
 .btn--icon-only {
