@@ -916,24 +916,90 @@
 }
 
 /* ==============================================================================
-   8. Footer (Material 3 Minimalist, Version Badge strictly at Bottom)
+   8. Footer (2-Column Top Area + Bottom Copyright/Version Bar)
    ============================================================================== */
 .footer {
   margin-top: 64px;
-  padding-top: 28px;
+  padding-top: 32px;
   border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 22px;
+  gap: 24px;
+  width: 100%;
 }
 
-/* 1. Upper Footer: GitHub Star & Links */
+.footer__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+}
+
+/* Left Side: Initiative & Dev Wonder Logo + Brand Text */
+.footer__initiative-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 8px;
+}
+
+.footer__initiative-label {
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.footer__dw-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.footer__dw-link:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.footer__dw-logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+}
+
+.footer__dw-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.footer__dw-name {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.footer__dw-slogan {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-top: 1px;
+}
+
+/* Right Side: GitHub Star Button & Repository Links */
 .footer__github-section {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
+  text-align: right;
   gap: 12px;
 }
 
@@ -969,9 +1035,9 @@
 .footer__nav {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .footer__nav a {
@@ -994,57 +1060,25 @@
   user-select: none;
 }
 
-/* 2. Middle Footer: An Open Source Initiative by Dev Wonder */
-.footer__initiative-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-}
-
-.footer__initiative-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-subtle);
-}
-
-.footer__dw-link {
-  display: inline-flex;
-  align-items: center;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.footer__dw-link:hover {
-  opacity: 0.88;
-  transform: translateY(-1px);
-}
-
-.footer__dw-logo {
-  height: 28px;
-  width: auto;
-  object-fit: contain;
-}
-
-/* 3. Bottom Footer: Copyright and Version at absolute bottom */
+/* Bottom Bar: Copyright on Left, Version on Right */
 .footer__bottom-section {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
-  padding-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  width: 100%;
 }
 
 .footer__copyright {
-  font-size: 0.8rem;
+  font-size: 0.825rem;
   color: var(--text-muted);
-  line-height: 1.3;
+  margin: 0;
 }
 
 .footer__version-wrap {
-  margin-top: 2px;
+  display: flex;
+  align-items: center;
 }
 
 .footer__version-badge {
@@ -1438,12 +1472,46 @@
 
   .footer {
     margin-top: 48px;
-    gap: 18px;
+    padding-top: 24px;
+    gap: 20px;
+  }
+
+  .footer__top {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 22px;
+  }
+
+  .footer__initiative-section {
+    align-items: center;
+    text-align: center;
+  }
+
+  .footer__dw-link {
+    justify-content: center;
+  }
+
+  .footer__dw-text {
+    text-align: left;
+  }
+
+  .footer__github-section {
+    align-items: center;
+    text-align: center;
   }
 
   .footer__nav {
+    justify-content: center;
     gap: 10px;
     font-size: 0.775rem;
+  }
+
+  .footer__bottom-section {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
   }
 }
 
