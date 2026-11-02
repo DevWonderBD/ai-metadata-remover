@@ -1,0 +1,39 @@
+# ==============================================================================
+# Dev Wonder AI Metadata Remover - Apache / cPanel Configuration
+# ==============================================================================
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Force HTTPS (Required for PWA Service Workers & WebAPK Installation)
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 2. SPA Fallback: Send all other requests to index.html if file/dir does not exist
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# 3. Ensure Service Worker & version.json are never aggressively cached by Apache
+<Files "sw.js">
+  Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</Files>
+
+<Files "version.json">
+  Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</Files>
+
+# 4. MIME Types for PWA Manifest and Icons
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest .json
+  AddType image/svg+xml .svg
+  AddType image/webp .webp
+  AddType image/x-icon .ico
+</IfModule>
