@@ -1010,14 +1010,14 @@ export default function App() {
               <img
                 src={devWonderEmblem}
                 alt="Dev Wonder"
-                className="h-6 w-auto object-contain"
+                className="h-6 sm:h-7 w-auto object-contain"
               />
               <div className="flex flex-col text-left">
-                <span className="font-['Syne'] font-extrabold text-sm uppercase tracking-wide text-black dark:text-white leading-none">
-                  Dev Wonder
+                <span className="font-['Syne',sans-serif] font-bold text-[12px] sm:text-[13px] uppercase tracking-[0.02em] text-black dark:text-white leading-tight">
+                  DEV WONDER
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-slate-500 dark:text-slate-400 mt-1 leading-none">
-                  Simplifying Tech
+                <span className="font-['Syne',sans-serif] font-bold text-[9px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                  SIMPLIFYING TECH
                 </span>
               </div>
             </a>
