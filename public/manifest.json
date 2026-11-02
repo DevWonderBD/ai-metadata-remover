@@ -9,6 +9,12 @@
   "background_color": "#0c0e14",
   "theme_color": "#06b6d4",
   "orientation": "any",
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "/manifest.json"
+    }
+  ],
   "icons": [
     {
       "src": "/favicon-32.png",

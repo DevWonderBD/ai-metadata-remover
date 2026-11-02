@@ -92,6 +92,9 @@ export default function App() {
   const [installPrompt, setInstallPrompt] = useState(window.__pwaInstallPrompt || null);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(() => {
+    return localStorage.getItem('dw_pwa_installed') === 'true';
+  });
 
   // FAQ accordion state
   const [faqOpen, setFaqOpen] = useState(null);
@@ -115,12 +118,26 @@ export default function App() {
         || window.navigator.standalone === true 
         || document.referrer.includes('android-app://');
       setIsStandalone(Boolean(isStand));
+      if (isStand) {
+        setIsInstalled(true);
+        localStorage.setItem('dw_pwa_installed', 'true');
+      }
     };
 
     checkStandalone();
     const mql = window.matchMedia('(display-mode: standalone)');
     if (mql.addEventListener) {
       mql.addEventListener('change', checkStandalone);
+    }
+
+    // Check if app is already installed on the OS via getInstalledRelatedApps
+    if ('getInstalledRelatedApps' in navigator) {
+      navigator.getInstalledRelatedApps().then(apps => {
+        if (apps && apps.length > 0) {
+          setIsInstalled(true);
+          localStorage.setItem('dw_pwa_installed', 'true');
+        }
+      }).catch(() => {});
     }
 
     fetchCurrentStats().then(setStats);
@@ -143,13 +160,17 @@ export default function App() {
       e.preventDefault();
       window.__pwaInstallPrompt = e;
       setInstallPrompt(e);
+      // Browser triggered prompt => app is not installed yet
+      setIsInstalled(false);
+      localStorage.removeItem('dw_pwa_installed');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', () => {
       window.__pwaInstallPrompt = null;
       setInstallPrompt(null);
-      setIsStandalone(true);
+      setIsInstalled(true);
+      localStorage.setItem('dw_pwa_installed', 'true');
       setShowInstallModal(false);
       showToast('✓ App installed to your device successfully!', 'success');
     });
@@ -170,12 +191,24 @@ export default function App() {
       if (outcome === 'accepted') {
         window.__pwaInstallPrompt = null;
         setInstallPrompt(null);
-        setIsStandalone(true);
+        setIsInstalled(true);
+        localStorage.setItem('dw_pwa_installed', 'true');
         showToast('✓ App installed to your device successfully!', 'success');
       }
+    } else if (isInstalled || isStandalone) {
+      showToast('✓ App is already installed! You can launch it from your Desktop / Applications or the icon in your address bar.', 'info');
     } else {
       setShowInstallModal(true);
     }
+  };
+
+  const handleInstalledClick = () => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (reg) reg.update();
+      });
+    }
+    showToast('✓ AI Metadata Remover is installed on your device (Offline Ready)!', 'success');
   };
 
   const handleCheckUpdate = () => {
@@ -428,15 +461,15 @@ export default function App() {
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          {isStandalone ? (
+          {isStandalone || isInstalled ? (
             <button 
               type="button" 
-              onClick={handleCheckUpdate} 
+              onClick={handleInstalledClick} 
               className="app-status-chip"
-              title="Running in installed app mode. Click to check for updates."
+              title="App is already installed on this device. Click to check for updates."
             >
               <span className="status-pulse-dot"></span>
-              <span>Up to date</span>
+              <span>App Installed</span>
             </button>
           ) : (
             <button 
