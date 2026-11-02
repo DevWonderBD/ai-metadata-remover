@@ -17,18 +17,12 @@
   RewriteRule . /index.html [L]
 </IfModule>
 
-# 3. Ensure Service Worker & version.json are never aggressively cached by Apache
-<Files "sw.js">
+# 3. Ensure Service Worker, version.json & manifest.json are never aggressively cached
+<FilesMatch "^(sw\.js|version\.json|manifest\.json)$">
   Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
   Header set Pragma "no-cache"
   Header set Expires "0"
-</Files>
-
-<Files "version.json">
-  Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
-  Header set Pragma "no-cache"
-  Header set Expires "0"
-</Files>
+</FilesMatch>
 
 # 4. MIME Types for PWA Manifest and Icons
 <IfModule mod_mime.c>
@@ -37,3 +31,4 @@
   AddType image/webp .webp
   AddType image/x-icon .ico
 </IfModule>
+
