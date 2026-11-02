@@ -552,18 +552,6 @@ export default function App() {
         </a>
 
         <nav className="topbar__actions">
-          {/* GitHub Star */}
-          <a 
-            href="https://github.com/DevWonderBD/ai-metadata-remover" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="topbar__github-btn"
-            title="Star on GitHub"
-          >
-            <Star size={14} />
-            <span>Star</span>
-          </a>
-
           {/* Theme Toggle */}
           <button 
             type="button" 
@@ -944,7 +932,40 @@ export default function App() {
 
       {/* ==================== Footer (Material 3 Minimalist) ==================== */}
       <footer className="footer">
-        <div className="footer__brand-wrap">
+        {/* 1. Upper: GitHub Star button and repository links */}
+        <div className="footer__github-section">
+          <a 
+            href="https://github.com/DevWonderBD/ai-metadata-remover" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="footer__github-star-btn"
+            title="Star on GitHub"
+          >
+            <Star size={14} fill="currentColor" />
+            <span>Star on GitHub</span>
+          </a>
+
+          <nav className="footer__nav" aria-label="Footer links">
+            <a href="https://github.com/DevWonderBD/ai-metadata-remover" target="_blank" rel="noopener noreferrer">
+              <GithubIcon size={14} />
+              <span>GitHub</span>
+            </a>
+            <span className="footer__nav-dot">·</span>
+            <a href="https://github.com/DevWonderBD/ai-metadata-remover/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={12} />
+              <span>MIT License</span>
+            </a>
+            <span className="footer__nav-dot">·</span>
+            <a href="https://github.com/DevWonderBD/ai-metadata-remover/issues" target="_blank" rel="noopener noreferrer">
+              <ExternalLink size={12} />
+              <span>Report Issue</span>
+            </a>
+          </nav>
+        </div>
+
+        {/* 2. Middle: Open source initiative by Dev Wonder */}
+        <div className="footer__initiative-section">
+          <span className="footer__initiative-label">An open source initiative by</span>
           <a 
             href="https://www.devwonderbd.com" 
             target="_blank" 
@@ -954,29 +975,16 @@ export default function App() {
           >
             <img src={devWonderEmblem} alt="Dev Wonder" className="footer__dw-logo" />
           </a>
+        </div>
+
+        {/* 3. Bottom: Copyright and Version strictly at the very bottom */}
+        <div className="footer__bottom-section">
           <p className="footer__copyright">
             © {new Date().getFullYear()} Dev Wonder · Simplifying Tech
           </p>
-        </div>
-
-        <nav className="footer__nav" aria-label="Footer links">
-          <a href="https://github.com/DevWonderBD/ai-metadata-remover" target="_blank" rel="noopener noreferrer">
-            <GithubIcon size={13} />
-            <span>GitHub</span>
-          </a>
-          <a href="https://github.com/DevWonderBD/ai-metadata-remover/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
-            <ExternalLink size={12} />
-            <span>MIT License</span>
-          </a>
-          <a href="https://github.com/DevWonderBD/ai-metadata-remover/issues" target="_blank" rel="noopener noreferrer">
-            <ExternalLink size={12} />
-            <span>Report Issue</span>
-          </a>
-        </nav>
-
-        {/* Version Badge is strictly at the very bottom */}
-        <div className="footer__version-wrap">
-          <span className="footer__version-badge">v{currentVersion}</span>
+          <div className="footer__version-wrap">
+            <span className="footer__version-badge">v{currentVersion}</span>
+          </div>
         </div>
       </footer>
 
