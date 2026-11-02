@@ -56,10 +56,62 @@ html, body {
   100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
 }
 
+/* Lottie-style Vector Keyframes */
+@keyframes lottieFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes lottieBounceDown {
+  0%, 100% { transform: translateY(0px); }
+  35% { transform: translateY(4px); }
+  60% { transform: translateY(-1px); }
+}
+
+@keyframes lottiePulseRing {
+  0% { transform: scale(0.92); opacity: 0.8; }
+  50% { transform: scale(1.18); opacity: 0.25; }
+  100% { transform: scale(0.92); opacity: 0.8; }
+}
+
+@keyframes lottieSparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.3) rotate(25deg); opacity: 0.75; }
+}
+
+@keyframes lottiePulseSlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.92); }
+}
+
 .animate-pulse-green {
   animation: pulseStatus 2s infinite;
 }
 
 .animate-pulse-amber {
   animation: pulseAmber 1.8s infinite;
+}
+
+.lottie-float {
+  animation: lottieFloat 3.2s ease-in-out infinite;
+}
+
+.lottie-bounce {
+  animation: lottieBounceDown 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.lottie-pulse-ring {
+  animation: lottiePulseRing 2.4s ease-out infinite;
+}
+
+.lottie-sparkle {
+  animation: lottieSparkle 2.2s ease-in-out infinite;
+}
+
+.lottie-sparkle-delay {
+  animation: lottieSparkle 2.2s ease-in-out 0.8s infinite;
+}
+
+.lottie-pulse-slow {
+  animation: lottiePulseSlow 2s ease-in-out infinite;
 }

@@ -25,7 +25,7 @@ import {
 import { cleanBytes } from './core/stripper.js';
 import { detectFileNameAI } from './core/detectAI.js';
 import { makeZip } from './core/zip.js';
-import { fetchCurrentStats, recordVisit, recordCleanedImages, syncOfflineQueue } from './services/statsService.js';
+import { fetchCurrentStats, recordVisit, recordCleanedImages, syncOfflineQueue, getStoredStats } from './services/statsService.js';
 import devWonderEmblem from './assets/dev-wonder-logo-clean.png';
 import appIcon from './assets/ai-remover-icon-1024.png';
 
@@ -43,6 +43,75 @@ function GithubIcon({ size = 14, className = "" }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} style={{ display: 'inline-block', verticalAlign: 'middle' }}>
       <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
     </svg>
+  );
+}
+
+/* Lottie-style Vector Animated Icons */
+function LottieUploadIcon({ isDragOver = false }) {
+  return (
+    <div className="relative flex items-center justify-center w-16 h-16 mb-3.5">
+      {/* Outer pulsing radar ring */}
+      <div className={`absolute inset-0 rounded-2xl bg-sky-500/15 ${isDragOver ? 'scale-125 bg-sky-500/30' : 'lottie-pulse-ring'}`} />
+      
+      {/* Animated Folder Box */}
+      <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-b from-sky-400/20 to-indigo-500/20 border border-sky-400/35 flex items-center justify-center shadow-inner overflow-hidden">
+        {/* Twinkling star particle */}
+        <span className="absolute top-1.5 right-1.5 text-sky-400 lottie-sparkle">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" />
+          </svg>
+        </span>
+        <span className="absolute bottom-1.5 left-1.5 text-indigo-400 lottie-sparkle-delay">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" />
+          </svg>
+        </span>
+        
+        {/* Bouncing Arrow */}
+        <div className={isDragOver ? 'translate-y-1 scale-110 text-sky-500 transition-transform' : 'lottie-bounce text-sky-500'}>
+          <FolderDown size={28} strokeWidth={2.2} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LottieShieldIcon() {
+  return (
+    <span className="relative flex items-center justify-center w-4 h-4">
+      <span className="absolute inset-0 rounded-full bg-sky-500/30 lottie-pulse-ring" />
+      <ShieldCheck size={14} className="relative text-sky-500 shrink-0" />
+    </span>
+  );
+}
+
+function LottieDownloadIcon({ size = 15, className = "" }) {
+  return (
+    <span className={`inline-flex items-center justify-center ${className}`}>
+      <span className="lottie-bounce inline-flex items-center">
+        <Download size={size} strokeWidth={2.4} />
+      </span>
+    </span>
+  );
+}
+
+function LottieSparkleIcon({ size = 14, className = "text-emerald-500" }) {
+  return (
+    <span className={`inline-flex items-center justify-center lottie-sparkle ${className}`}>
+      <Sparkles size={size} />
+    </span>
+  );
+}
+
+function LottieVisitorIcon({ size = 14, className = "text-indigo-500" }) {
+  return (
+    <span className={`relative inline-flex items-center justify-center ${className}`}>
+      <span className="absolute -inset-0.5 rounded-full bg-indigo-500/25 lottie-pulse-ring" />
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="relative">
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+        <circle cx="12" cy="12" r="3" className="lottie-pulse-slow fill-indigo-500/40" />
+      </svg>
+    </span>
   );
 }
 
@@ -92,12 +161,8 @@ export default function App() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [remoteVersion, setRemoteVersion] = useState(currentVersion);
 
-  // Live Stats
-  const [stats, setStats] = useState({
-    images_cleaned: 0,
-    ai_detected_count: 0,
-    total_visits: 0,
-  });
+  // Live Persistent Stats (survives page refreshes offline)
+  const [stats, setStats] = useState(() => getStoredStats());
 
   // PWA install
   const [installPrompt, setInstallPrompt] = useState(window.__pwaInstallPrompt || null);
@@ -556,58 +621,60 @@ export default function App() {
 
       {/* Top Navigation */}
       <header className="flex items-center justify-between gap-4 pb-5 mb-8 border-b border-slate-200 dark:border-[#1e264a]">
-        <a href="/" className="flex items-center gap-3 text-slate-900 dark:text-slate-100 hover:opacity-90 transition-opacity min-w-0" title="AI Metadata Remover">
-          <img src={appIcon} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 shadow-md shadow-sky-500/20 border border-white/10" />
-          <div className="flex flex-col min-w-0">
-            <span className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">AI Metadata Remover</span>
-            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1 font-medium">
+        {/* Left Brand Container (Height: 44px) */}
+        <a href="/" className="flex items-center gap-3 text-slate-900 dark:text-slate-100 hover:opacity-90 transition-opacity min-w-0 h-11" title="AI Metadata Remover">
+          <img src={appIcon} alt="" className="w-11 h-11 rounded-2xl object-cover shrink-0 shadow-md shadow-sky-500/20 border border-white/10" />
+          <div className="flex flex-col justify-center min-w-0">
+            <span className="font-bold text-base sm:text-lg tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">AI Metadata Remover</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1 font-medium leading-none">
               by <span className="font-['Syne',sans-serif] font-bold uppercase tracking-[0.06em] text-slate-900 dark:text-white">DEV WONDER</span>
             </span>
           </div>
         </a>
 
-        <nav className="flex items-center gap-2 shrink-0">
-          {/* Theme Toggle */}
+        {/* Right Actions Container (Matching 44px height for all buttons) */}
+        <nav className="flex items-center gap-2.5 shrink-0 h-11">
+          {/* Theme Toggle (Matching h-11 w-11) */}
           <button 
             type="button" 
             onClick={toggleTheme} 
-            className="w-9 h-9 inline-flex items-center justify-center rounded-full bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] text-slate-500 hover:text-sky-500 hover:border-sky-500/40 shadow-sm transition-all active:scale-95 cursor-pointer"
+            className="w-11 h-11 inline-flex items-center justify-center rounded-2xl bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] text-slate-600 dark:text-slate-300 hover:text-sky-500 hover:border-sky-500/40 shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
             title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            {theme === 'dark' ? <Sun size={18} className="lottie-sparkle" /> : <Moon size={18} />}
           </button>
 
-          {/* Install / Update / Status */}
+          {/* Install / Update / Status Button (Matching h-11 height) */}
           {updateAvailable ? (
             <button 
               type="button" 
               onClick={handleApplyUpdate} 
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-600 dark:text-amber-400 shadow-sm transition-all cursor-pointer"
+              className="h-11 inline-flex items-center gap-2 px-4 sm:px-5 text-xs sm:text-sm font-semibold rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-600 dark:text-amber-400 shadow-sm hover:shadow transition-all cursor-pointer"
               title={`Update to v${remoteVersion}`}
             >
-              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse-amber" />
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0 animate-pulse-amber" />
               <span>Update</span>
             </button>
           ) : isStandalone || isInstalled ? (
             <button 
               type="button" 
               onClick={handleCheckUpdate} 
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] text-slate-800 dark:text-slate-200 shadow-sm transition-all cursor-pointer"
+              className="h-11 inline-flex items-center gap-2 px-4 sm:px-5 text-xs sm:text-sm font-semibold rounded-2xl bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] text-slate-800 dark:text-slate-200 shadow-sm hover:shadow transition-all cursor-pointer"
               title={`v${currentVersion} — Check for updates`}
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse-green" />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 animate-pulse-green" />
               <span>App Installed</span>
             </button>
           ) : (
             <button 
               type="button" 
               onClick={handleInstallClick} 
-              className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer"
+              className="h-11 inline-flex items-center gap-2.5 px-5 sm:px-6 text-xs sm:text-sm font-bold rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white shadow-md shadow-sky-500/25 hover:shadow-lg transition-all active:scale-95 cursor-pointer"
               title="Install for offline use"
             >
-              <Download size={14} />
-              <span>Install</span>
+              <LottieDownloadIcon size={16} />
+              <span>Install App</span>
             </button>
           )}
         </nav>
@@ -618,7 +685,7 @@ export default function App() {
         {/* Hero Section */}
         <section className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25 mb-4">
-            <ShieldCheck size={14} />
+            <LottieShieldIcon />
             <span>100% Private · Your photos never leave your device</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-3 leading-tight">
@@ -630,15 +697,19 @@ export default function App() {
 
           {/* Stats Chips */}
           <div className="flex justify-center items-center gap-2.5 flex-wrap mb-7">
-            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs text-slate-500 dark:text-slate-400 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0" />
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs sm:text-sm text-slate-500 dark:text-slate-400 shadow-sm">
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0 lottie-pulse-ring" />
               <span><strong className="text-slate-900 dark:text-slate-100 font-bold">{stats.images_cleaned.toLocaleString()}</strong> photos cleaned</span>
             </div>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs text-slate-500 dark:text-slate-400 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs sm:text-sm text-slate-500 dark:text-slate-400 shadow-sm">
+              <LottieSparkleIcon size={14} className="text-emerald-500 shrink-0" />
               <span><strong className="text-slate-900 dark:text-slate-100 font-bold">{stats.ai_detected_count.toLocaleString()}</strong> AI traces removed</span>
             </div>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs text-slate-500 dark:text-slate-400 shadow-sm">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs sm:text-sm text-slate-500 dark:text-slate-400 shadow-sm">
+              <LottieVisitorIcon size={15} className="text-indigo-500 shrink-0" />
+              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">{stats.total_visits.toLocaleString()}</strong> site visits</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs sm:text-sm text-slate-500 dark:text-slate-400 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
               <span><strong className="text-slate-900 dark:text-slate-100 font-bold">0 B</strong> uploaded · 100% local</span>
             </div>
@@ -677,9 +748,7 @@ export default function App() {
 
           {items.length === 0 ? (
             <>
-              <div className="w-14 h-14 rounded-2xl bg-sky-500/10 text-sky-500 border border-sky-500/25 grid place-items-center mb-3.5">
-                <FolderDown size={28} />
-              </div>
+              <LottieUploadIcon isDragOver={isDragOver} />
               <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 mb-1.5">
                 Drop your photos here, or click to choose files
               </div>
@@ -691,7 +760,7 @@ export default function App() {
                 className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white font-bold text-sm rounded-full shadow-md shadow-sky-500/25 hover:shadow-lg transition-all active:scale-95 cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
               >
-                <Plus size={16} />
+                <LottieSparkleIcon size={16} className="text-white shrink-0" />
                 <span>Select Images</span>
               </button>
               <div className="mt-3.5 text-xs text-slate-400 dark:text-slate-500">
@@ -795,7 +864,7 @@ export default function App() {
                   disabled={doneCount === 0 || processingCount > 0} 
                   onClick={handleDownloadAll}
                 >
-                  <Download size={15} />
+                  <LottieDownloadIcon size={15} />
                   <span>Download All as ZIP ({doneCount})</span>
                 </button>
               )}
