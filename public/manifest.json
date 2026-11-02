@@ -1,11 +1,11 @@
 {
-  "name": "AI Metadata Remover",
-  "short_name": "CleanMeta",
-  "description": "Free, private client-side AI metadata and EXIF remover by DevWonder.",
+  "name": "AI Metadata Remover - Dev Wonder",
+  "short_name": "AI Remover",
+  "description": "Free, private client-side AI metadata and EXIF remover by Dev Wonder.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d0f12",
-  "theme_color": "#6366f1",
+  "background_color": "#0c0e14",
+  "theme_color": "#06b6d4",
   "orientation": "any",
   "icons": [
     {
