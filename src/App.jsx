@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import confetti from "canvas-confetti";
-import {
-  ShieldCheck,
-  Download,
-  Copy,
-  Trash2,
-  CheckCircle2,
-  AlertCircle,
-  FolderDown,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import confetti from 'canvas-confetti';
+import { 
+  ShieldCheck, 
+  Download, 
+  Copy, 
+  Trash2, 
+  CheckCircle2, 
+  AlertCircle, 
+  FolderDown, 
+  RefreshCw, 
+  ChevronDown, 
+  ChevronUp, 
   Star,
   Plus,
   Sparkles,
@@ -20,54 +20,37 @@ import {
   Monitor,
   Smartphone,
   ExternalLink,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { cleanBytes } from "./core/stripper.js";
-import { detectFileNameAI } from "./core/detectAI.js";
-import { makeZip } from "./core/zip.js";
-import {
-  fetchCurrentStats,
-  recordVisit,
-  recordCleanedImages,
-  syncOfflineQueue,
-} from "./services/statsService.js";
-import devWonderEmblem from "./assets/dev-wonder-logo-clean.png";
-import appIcon from "./assets/ai-remover-icon-1024.png";
-import "./App.css";
+import { cleanBytes } from './core/stripper.js';
+import { detectFileNameAI } from './core/detectAI.js';
+import { makeZip } from './core/zip.js';
+import { fetchCurrentStats, recordVisit, recordCleanedImages, syncOfflineQueue } from './services/statsService.js';
+import devWonderEmblem from './assets/dev-wonder-logo-clean.png';
+import appIcon from './assets/ai-remover-icon-1024.png';
 
 const SUPPORTED_EXT_RE = /\.(jpe?g|png|webp|gif|avif|heic|heif|bmp|tiff?)$/i;
 
-function GithubIcon({ size = 14, className = "" }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      style={{ display: "inline-block", verticalAlign: "middle" }}
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-      />
-    </svg>
-  );
+function formatBytes(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(0) + ' KB';
+  return (bytes / 1048576).toFixed(2) + ' MB';
 }
 
-function formatBytes(bytes) {
-  if (!bytes || bytes === 0) return "0 B";
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1048576) return (bytes / 1024).toFixed(0) + " KB";
-  return (bytes / 1048576).toFixed(2) + " MB";
+function GithubIcon({ size = 14, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+      <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+    </svg>
+  );
 }
 
 export default function App() {
   const [items, setItems] = useState([]);
   const [keepICC, setKeepICC] = useState(true);
   const [unique, setUnique] = useState(false);
-  const [nameMode, setNameMode] = useState("suffix");
+  const [nameMode, setNameMode] = useState('suffix');
   const [isDragOver, setIsDragOver] = useState(false);
   const [recentUpload, setRecentUpload] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
@@ -75,44 +58,37 @@ export default function App() {
 
   // Theme state
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem("dw_theme");
-    if (saved === "light" || saved === "dark") return saved;
-    return window.matchMedia("(prefers-color-scheme: light)").matches
-      ? "light"
-      : "dark";
+    const saved = localStorage.getItem('dw_theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   });
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("dw_theme", theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('dw_theme', theme);
   }, [theme]);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
     const handleOSThemeChange = (e) => {
-      const manual = localStorage.getItem("dw_theme_manual");
+      const manual = localStorage.getItem('dw_theme_manual');
       if (!manual) {
-        setTheme(e.matches ? "light" : "dark");
+        setTheme(e.matches ? 'light' : 'dark');
       }
     };
-    mediaQuery.addEventListener?.("change", handleOSThemeChange);
-    return () =>
-      mediaQuery.removeEventListener?.("change", handleOSThemeChange);
+    mediaQuery.addEventListener?.('change', handleOSThemeChange);
+    return () => mediaQuery.removeEventListener?.('change', handleOSThemeChange);
   }, []);
 
   const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(nextTheme);
-    localStorage.setItem("dw_theme_manual", "true");
-    showToast(
-      `Switched to ${nextTheme === "light" ? "Light" : "Dark"} mode`,
-      "info",
-    );
+    localStorage.setItem('dw_theme_manual', 'true');
+    showToast(`Switched to ${nextTheme === 'light' ? 'Light' : 'Dark'} mode`, 'info');
   };
 
   // App version tracking
-  const currentVersion =
-    typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "1.0.0";
+  const currentVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0';
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [remoteVersion, setRemoteVersion] = useState(currentVersion);
 
@@ -124,13 +100,11 @@ export default function App() {
   });
 
   // PWA install
-  const [installPrompt, setInstallPrompt] = useState(
-    window.__pwaInstallPrompt || null,
-  );
+  const [installPrompt, setInstallPrompt] = useState(window.__pwaInstallPrompt || null);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isInstalled, setIsInstalled] = useState(() => {
-    return localStorage.getItem("dw_pwa_installed") === "true";
+    return localStorage.getItem('dw_pwa_installed') === 'true';
   });
   const [isInstalling, setIsInstalling] = useState(false);
   const [installProgress, setInstallProgress] = useState(0);
@@ -142,44 +116,40 @@ export default function App() {
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
-  const showToast = useCallback((message, type = "info") => {
+  const showToast = useCallback((message, type = 'info') => {
     const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
+      setToasts(prev => prev.filter(t => t.id !== id));
     }, 3800);
   }, []);
 
-  // Initialize stats, record visit, and setup PWA install & standalone detection
+  // Initialize stats, record visit, and setup PWA install
   useEffect(() => {
     const checkStandalone = () => {
-      const isStand =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        window.navigator.standalone === true ||
-        document.referrer.includes("android-app://");
+      const isStand = window.matchMedia('(display-mode: standalone)').matches 
+        || window.navigator.standalone === true 
+        || document.referrer.includes('android-app://');
       setIsStandalone(Boolean(isStand));
       if (isStand) {
         setIsInstalled(true);
-        localStorage.setItem("dw_pwa_installed", "true");
+        localStorage.setItem('dw_pwa_installed', 'true');
       }
     };
 
     checkStandalone();
-    const mql = window.matchMedia("(display-mode: standalone)");
+    const mql = window.matchMedia('(display-mode: standalone)');
     if (mql.addEventListener) {
-      mql.addEventListener("change", checkStandalone);
+      mql.addEventListener('change', checkStandalone);
     }
 
-    if ("getInstalledRelatedApps" in navigator) {
-      navigator
-        .getInstalledRelatedApps()
-        .then((apps) => {
-          if (apps && apps.length > 0) {
-            setIsInstalled(true);
-            localStorage.setItem("dw_pwa_installed", "true");
-          }
-        })
-        .catch(() => {});
+    if ('getInstalledRelatedApps' in navigator) {
+      navigator.getInstalledRelatedApps().then(apps => {
+        if (apps && apps.length > 0) {
+          setIsInstalled(true);
+          localStorage.setItem('dw_pwa_installed', 'true');
+        }
+      }).catch(() => {});
     }
 
     fetchCurrentStats().then(setStats);
@@ -195,18 +165,18 @@ export default function App() {
         setInstallPrompt(window.__pwaInstallPrompt);
       }
     };
-    window.addEventListener("pwa-prompt-ready", handlePromptReady);
+    window.addEventListener('pwa-prompt-ready', handlePromptReady);
 
     const handleBeforeInstall = (e) => {
       e.preventDefault();
       window.__pwaInstallPrompt = e;
       setInstallPrompt(e);
       setIsInstalled(false);
-      localStorage.removeItem("dw_pwa_installed");
+      localStorage.removeItem('dw_pwa_installed');
     };
 
-    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-    window.addEventListener("appinstalled", () => {
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', () => {
       window.__pwaInstallPrompt = null;
       setInstallPrompt(null);
       setIsInstalled(true);
@@ -216,53 +186,47 @@ export default function App() {
       setInstallProgress(100);
       setTimeout(() => {
         setIsInstalling(false);
-        localStorage.setItem("dw_pwa_installed", "true");
+        localStorage.setItem('dw_pwa_installed', 'true');
         setShowInstallModal(false);
-        showToast("✓ App installed successfully!", "success");
+        showToast('✓ App installed successfully!', 'success');
       }, 500);
     });
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-      window.removeEventListener("pwa-prompt-ready", handlePromptReady);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('pwa-prompt-ready', handlePromptReady);
       if (mql.removeEventListener) {
-        mql.removeEventListener("change", checkStandalone);
+        mql.removeEventListener('change', checkStandalone);
       }
     };
   }, [showToast]);
 
   // Check for remote updates
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .getRegistration()
-        .then((reg) => {
-          if (!reg) return;
-          if (reg.waiting) {
-            setUpdateAvailable(true);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
+        if (!reg) return;
+        if (reg.waiting) {
+          setUpdateAvailable(true);
+        }
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                setUpdateAvailable(true);
+                showToast('A new update is available!', 'info');
+              }
+            });
           }
-          reg.addEventListener("updatefound", () => {
-            const newWorker = reg.installing;
-            if (newWorker) {
-              newWorker.addEventListener("statechange", () => {
-                if (
-                  newWorker.state === "installed" &&
-                  navigator.serviceWorker.controller
-                ) {
-                  setUpdateAvailable(true);
-                  showToast("A new update is available!", "info");
-                }
-              });
-            }
-          });
-        })
-        .catch(() => {});
+        });
+      }).catch(() => {});
     }
 
     const checkRemoteVersion = () => {
       fetch(`/version.json?t=${Date.now()}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
           if (data && data.version && data.version !== currentVersion) {
             setUpdateAvailable(true);
             setRemoteVersion(data.version);
@@ -277,11 +241,11 @@ export default function App() {
   }, [currentVersion, showToast]);
 
   const handleApplyUpdate = () => {
-    showToast("Updating to latest version…", "info");
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistration().then((reg) => {
+    showToast('Updating to latest version…', 'info');
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
         if (reg && reg.waiting) {
-          reg.waiting.postMessage({ type: "SKIP_WAITING" });
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         }
       });
     }
@@ -293,24 +257,19 @@ export default function App() {
   const handleInstallClick = async () => {
     if (installPrompt) {
       try {
-        // 1. Show browser's native install dialog first WITHOUT showing progress overlay yet
         installPrompt.prompt();
         const { outcome } = await installPrompt.userChoice;
 
-        // 2. ONLY show progress overlay if user actually clicks "Install" in the browser dialog!
-        if (outcome === "accepted") {
+        if (outcome === 'accepted') {
           setIsInstalling(true);
           setInstallProgress(15);
 
           const startTime = Date.now();
-          const targetDuration = 2600; // ~2.6s smooth progress while browser mints WebAPK
-
+          const targetDuration = 2600;
+          
           const progressInterval = setInterval(() => {
             const elapsed = Date.now() - startTime;
-            const pct = Math.min(
-              92,
-              Math.round(15 + (elapsed / targetDuration) * 77),
-            );
+            const pct = Math.min(92, Math.round(15 + (elapsed / targetDuration) * 77));
             setInstallProgress(pct);
             if (pct >= 92) {
               clearInterval(progressInterval);
@@ -325,11 +284,8 @@ export default function App() {
               window.__pwaInstallPrompt = null;
               setInstallPrompt(null);
               setIsInstalled(true);
-              localStorage.setItem("dw_pwa_installed", "true");
-              showToast(
-                "✓ App installed to your device successfully!",
-                "success",
-              );
+              localStorage.setItem('dw_pwa_installed', 'true');
+              showToast('✓ App installed to your device successfully!', 'success');
             }, 600);
           }, 3000);
 
@@ -338,12 +294,11 @@ export default function App() {
             clearTimeout(completeTimeout);
           };
         } else {
-          // User clicked "Cancel" on browser dialog - do not show progress
           setIsInstalling(false);
           setInstallProgress(0);
         }
       } catch (err) {
-        console.error("Install error:", err);
+        console.error('Install error:', err);
         setIsInstalling(false);
         setInstallProgress(0);
       }
@@ -355,343 +310,298 @@ export default function App() {
   };
 
   const handleCheckUpdate = () => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistration().then((reg) => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(reg => {
         if (reg) reg.update();
       });
     }
 
     fetch(`/version.json?t=${Date.now()}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
         if (data && data.version && data.version !== currentVersion) {
           setUpdateAvailable(true);
           setRemoteVersion(data.version);
-          showToast(`Update v${data.version} available!`, "info");
+          showToast(`Update v${data.version} available!`, 'info');
         } else {
-          showToast(`App is up to date (v${currentVersion})`, "success");
+          showToast(`App is up to date (v${currentVersion})`, 'success');
         }
       })
       .catch(() => {
-        showToast(`App is up to date (v${currentVersion})`, "success");
+        showToast(`App is up to date (v${currentVersion})`, 'success');
       });
   };
 
   // Processing logic
-  const processSingleItem = useCallback(
-    async (item, options) => {
-      setItems((prev) =>
-        prev.map((x) =>
-          x.id === item.id ? { ...x, status: "processing" } : x,
-        ),
-      );
+  const processSingleItem = useCallback(async (item, options) => {
+    setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'processing' } : x));
 
-      try {
-        const u8 = new Uint8Array(await item.file.arrayBuffer());
-        const cleaned = await cleanBytes(u8, item.file, options);
-        const blobUrl = URL.createObjectURL(
-          new Blob([cleaned.bytes], { type: cleaned.mime }),
-        );
+    try {
+      const u8 = new Uint8Array(await item.file.arrayBuffer());
+      const cleaned = await cleanBytes(u8, item.file, options);
+      const blobUrl = URL.createObjectURL(new Blob([cleaned.bytes], { type: cleaned.mime }));
 
-        setItems((prev) =>
-          prev.map((x) => {
-            if (x.id === item.id) {
-              return { ...x, status: "done", out: cleaned, url: blobUrl };
-            }
-            return x;
-          }),
-        );
+      setItems(prev => prev.map(x => {
+        if (x.id === item.id) {
+          return { ...x, status: 'done', out: cleaned, url: blobUrl };
+        }
+        return x;
+      }));
 
-        const aiCount =
-          (cleaned.ai ? cleaned.ai.length : 0) + (item.nameAI.length ? 1 : 0);
-        recordCleanedImages(1, aiCount);
-        setStats((prev) => ({
-          ...prev,
-          images_cleaned: prev.images_cleaned + 1,
-          ai_detected_count: prev.ai_detected_count + (aiCount > 0 ? 1 : 0),
-        }));
+      const aiCount = (cleaned.ai ? cleaned.ai.length : 0) + (item.nameAI.length ? 1 : 0);
+      recordCleanedImages(1, aiCount);
+      setStats(prev => ({
+        ...prev,
+        images_cleaned: prev.images_cleaned + 1,
+        ai_detected_count: prev.ai_detected_count + (aiCount > 0 ? 1 : 0),
+      }));
 
-        showToast(`Cleaned ${item.file.name}`, "success");
+      showToast(`Cleaned ${item.file.name}`, 'success');
 
-        setTimeout(() => {
-          const current = itemsRef.current;
-          const allDone =
-            current.length > 0 &&
-            current.every((x) => x.status === "done" || x.status === "error");
-          if (allDone) {
-            confetti({
-              particleCount: 50,
-              spread: 65,
-              origin: { y: 0.65 },
-              colors: ["#38bdf8", "#818cf8", "#10b981", "#06b6d4"],
-            });
-          }
-        }, 200);
-      } catch (err) {
-        console.error("Processing error:", err);
-        setItems((prev) =>
-          prev.map((x) => {
-            if (x.id === item.id) {
-              return {
-                ...x,
-                status: "error",
-                error: err.message || "Processing failed",
-              };
-            }
-            return x;
-          }),
-        );
-        showToast(`Error: ${item.file.name}`, "error");
-      }
-    },
-    [showToast],
-  );
-
-  const addFiles = useCallback(
-    (fileList) => {
-      const newItems = [];
-      for (const f of fileList) {
-        if (f.type.startsWith("image/") || SUPPORTED_EXT_RE.test(f.name)) {
-          newItems.push({
-            id: Math.random().toString(36).substring(2, 9),
-            file: f,
-            status: "queued",
-            nameAI: detectFileNameAI(f.name),
-            open: false,
-            out: null,
-            url: null,
-            error: null,
+      setTimeout(() => {
+        const current = itemsRef.current;
+        const allDone = current.length > 0 && current.every(x => x.status === 'done' || x.status === 'error');
+        if (allDone) {
+          confetti({
+            particleCount: 50,
+            spread: 65,
+            origin: { y: 0.65 },
+            colors: ['#38bdf8', '#818cf8', '#10b981', '#06b6d4']
           });
         }
+      }, 200);
+
+    } catch (err) {
+      console.error('Processing error:', err);
+      setItems(prev => prev.map(x => {
+        if (x.id === item.id) {
+          return { ...x, status: 'error', error: err.message || 'Processing failed' };
+        }
+        return x;
+      }));
+      showToast(`Error: ${item.file.name}`, 'error');
+    }
+  }, [showToast]);
+
+  const addFiles = useCallback((fileList) => {
+    const newItems = [];
+    for (const f of fileList) {
+      if (f.type.startsWith('image/') || SUPPORTED_EXT_RE.test(f.name)) {
+        newItems.push({
+          id: Math.random().toString(36).substring(2, 9),
+          file: f,
+          status: 'queued',
+          nameAI: detectFileNameAI(f.name),
+          open: false,
+          out: null,
+          url: null,
+          error: null,
+        });
       }
-      if (!newItems.length) return;
+    }
+    if (!newItems.length) return;
 
-      setItems((prev) => [...prev, ...newItems]);
-      setRecentUpload(true);
-      setTimeout(() => setRecentUpload(false), 1400);
+    setItems(prev => [...prev, ...newItems]);
+    setRecentUpload(true);
+    setTimeout(() => setRecentUpload(false), 1400);
 
-      showToast(
-        `Received ${newItems.length} image${newItems.length > 1 ? "s" : ""}`,
-        "info",
-      );
+    showToast(`Received ${newItems.length} image${newItems.length > 1 ? 's' : ''}`, 'info');
 
-      const currentOpts = { keepICC, unique };
-      newItems.forEach((it) => {
-        processSingleItem(it, currentOpts);
-      });
-    },
-    [keepICC, unique, processSingleItem, showToast],
-  );
+    const currentOpts = { keepICC, unique };
+    newItems.forEach(it => {
+      processSingleItem(it, currentOpts);
+    });
+  }, [keepICC, unique, processSingleItem, showToast]);
 
   // Clipboard paste
   useEffect(() => {
     const handlePaste = (e) => {
       const activeEl = document.activeElement;
-      if (
-        activeEl &&
-        (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA")
-      )
-        return;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
       const dt = e.clipboardData;
       if (!dt) return;
       let files = [...dt.files];
       if (!files.length) {
-        files = [...dt.items]
-          .filter((i) => i.kind === "file")
-          .map((i) => i.getAsFile())
-          .filter(Boolean);
+        files = [...dt.items].filter(i => i.kind === 'file').map(i => i.getAsFile()).filter(Boolean);
       }
-      files = files.filter(
-        (f) => f.type.startsWith("image/") || SUPPORTED_EXT_RE.test(f.name),
-      );
+      files = files.filter(f => f.type.startsWith('image/') || SUPPORTED_EXT_RE.test(f.name));
       if (files.length) {
         e.preventDefault();
         addFiles(files);
       }
     };
-    window.addEventListener("paste", handlePaste);
-    return () => window.removeEventListener("paste", handlePaste);
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
   }, [addFiles]);
 
   const handleKeepICCChange = (checked) => {
     setKeepICC(checked);
-    items.forEach((it) => {
-      processSingleItem(it, { keepICC: checked, unique });
-    });
+    items.forEach(it => { processSingleItem(it, { keepICC: checked, unique }); });
   };
 
   const handleUniqueChange = (checked) => {
     setUnique(checked);
-    items.forEach((it) => {
-      processSingleItem(it, { keepICC, unique: checked });
-    });
+    items.forEach(it => { processSingleItem(it, { keepICC, unique: checked }); });
   };
 
   const generateOutputName = (item, index) => {
     if (!item.out) return item.file.name;
-    const base = item.file.name.replace(/\.[^.]+$/, "");
+    const base = item.file.name.replace(/\.[^.]+$/, '');
     const ext = item.out.ext;
-    if (nameMode === "keep") return `${base}.${ext}`;
-    if (nameMode === "suffix") return `${base}-clean.${ext}`;
-    return `image-${String(index + 1).padStart(3, "0")}.${ext}`;
+    if (nameMode === 'keep') return `${base}.${ext}`;
+    if (nameMode === 'suffix') return `${base}-clean.${ext}`;
+    return `image-${String(index + 1).padStart(3, '0')}.${ext}`;
   };
 
   const handleCopy = async (item) => {
     if (!item.out || !navigator.clipboard) return;
     try {
       let pngBlob;
-      if (item.out.mime === "image/png") {
-        pngBlob = new Blob([item.out.bytes], { type: "image/png" });
+      if (item.out.mime === 'image/png') {
+        pngBlob = new Blob([item.out.bytes], { type: 'image/png' });
       } else {
-        const bmp = await createImageBitmap(
-          new Blob([item.out.bytes], { type: item.out.mime }),
-        );
-        const canvas = document.createElement("canvas");
+        const bmp = await createImageBitmap(new Blob([item.out.bytes], { type: item.out.mime }));
+        const canvas = document.createElement('canvas');
         canvas.width = bmp.width;
         canvas.height = bmp.height;
-        canvas.getContext("2d").drawImage(bmp, 0, 0);
+        canvas.getContext('2d').drawImage(bmp, 0, 0);
         if (bmp.close) bmp.close();
-        pngBlob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+        pngBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
       }
-      await navigator.clipboard.write([
-        new ClipboardItem({ "image/png": pngBlob }),
-      ]);
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
       setCopiedId(item.id);
-      showToast("Copied to clipboard", "success");
+      showToast('Copied to clipboard', 'success');
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      alert("Copy failed. Please use the Download button.");
+      alert('Copy failed. Please use the Download button.');
     }
   };
 
   const handleDownloadAll = () => {
-    const doneItems = items.filter((it) => it.status === "done");
+    const doneItems = items.filter(it => it.status === 'done');
     if (!doneItems.length) return;
     const filesForZip = doneItems.map((it, idx) => ({
       name: generateOutputName(it, idx),
       bytes: it.out.bytes,
     }));
     const zipBlob = makeZip(filesForZip);
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = URL.createObjectURL(zipBlob);
-    link.download = "cleaned-images.zip";
+    link.download = 'cleaned-images.zip';
     link.click();
-    showToast(`Downloaded ${filesForZip.length} images as ZIP`, "success");
+    showToast(`Downloaded ${filesForZip.length} images as ZIP`, 'success');
     setTimeout(() => URL.revokeObjectURL(link.href), 5000);
   };
 
   const handleClearAll = () => {
-    items.forEach((it) => it.url && URL.revokeObjectURL(it.url));
+    items.forEach(it => it.url && URL.revokeObjectURL(it.url));
     setItems([]);
-    showToast("All cleared", "info");
+    showToast('All cleared', 'info');
   };
 
   const removeItem = (id) => {
-    setItems((prev) => {
-      const item = prev.find((x) => x.id === id);
+    setItems(prev => {
+      const item = prev.find(x => x.id === id);
       if (item && item.url) URL.revokeObjectURL(item.url);
-      return prev.filter((x) => x.id !== id);
+      return prev.filter(x => x.id !== id);
     });
   };
 
-  const doneCount = items.filter((it) => it.status === "done").length;
-  const processingCount = items.filter(
-    (it) => it.status === "processing" || it.status === "queued",
-  ).length;
+  const doneCount = items.filter(it => it.status === 'done').length;
+  const processingCount = items.filter(it => it.status === 'processing' || it.status === 'queued').length;
 
   return (
-    <div className="app-shell">
-      {/* ==================== Toast Notifications ==================== */}
-      <div className="toast-stack">
-        {toasts.map((t) => (
-          <div key={t.id} className={`toast toast--${t.type}`}>
-            {t.type === "success" && <CheckCircle2 size={16} />}
-            {t.type === "info" && <FolderDown size={16} />}
-            {t.type === "error" && <AlertCircle size={16} />}
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20 min-h-screen flex flex-col relative">
+      {/* Toast Stack */}
+      <div className="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full">
+        {toasts.map(t => (
+          <div 
+            key={t.id} 
+            className={`pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl text-sm font-medium backdrop-blur-md shadow-lg border transition-all ${
+              t.type === 'success' 
+                ? 'bg-white/95 dark:bg-[#11162e]/95 text-slate-900 dark:text-slate-100 border-l-4 border-l-emerald-500 border-slate-200 dark:border-[#1e264a]' 
+                : t.type === 'error'
+                ? 'bg-white/95 dark:bg-[#11162e]/95 text-slate-900 dark:text-slate-100 border-l-4 border-l-rose-500 border-slate-200 dark:border-[#1e264a]'
+                : 'bg-white/95 dark:bg-[#11162e]/95 text-slate-900 dark:text-slate-100 border-l-4 border-l-sky-500 border-slate-200 dark:border-[#1e264a]'
+            }`}
+          >
+            {t.type === 'success' && <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />}
+            {t.type === 'info' && <FolderDown size={16} className="text-sky-500 shrink-0" />}
+            {t.type === 'error' && <AlertCircle size={16} className="text-rose-500 shrink-0" />}
             <span>{t.message}</span>
           </div>
         ))}
       </div>
 
-      {/* ==================== Install Progress Overlay ==================== */}
+      {/* Install Progress Overlay */}
       {isInstalling && (
-        <div className="install-progress-overlay">
-          <div className="install-progress-card">
-            <img src={appIcon} alt="" className="install-progress-icon" />
-            <div className="install-progress-info">
-              <h3>Installing AI Metadata Remover…</h3>
-              <p className="install-progress-sub">
-                Registering app &amp; caching offline resources
-              </p>
-            </div>
-            <div className="install-progress-bar-track">
-              <div
-                className="install-progress-bar-fill"
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-5">
+          <div className="bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-3xl p-7 max-w-sm w-full text-center shadow-2xl">
+            <img src={appIcon} alt="" className="w-14 h-14 rounded-2xl mx-auto mb-3.5 object-cover shadow-lg shadow-sky-500/20" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">Installing AI Metadata Remover…</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">Registering app &amp; caching offline resources</p>
+            <div className="w-full h-2 bg-slate-100 dark:bg-[#141a38] rounded-full overflow-hidden border border-slate-200 dark:border-[#1e264a] mb-3">
+              <div 
+                className="h-full bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full transition-all duration-300"
                 style={{ width: `${Math.min(installProgress, 100)}%` }}
               />
             </div>
-            <div className="install-progress-footer">
-              <span className="install-progress-label">
-                {installProgress >= 100
-                  ? "✓ Ready in your App Drawer!"
-                  : "Installing…"}
-              </span>
-              <span className="install-progress-percent">
-                {Math.round(installProgress)}%
-              </span>
+            <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+              <span>{installProgress >= 100 ? '✓ Ready in your App Drawer!' : 'Installing…'}</span>
+              <span className="font-mono font-semibold text-sky-500">{Math.round(installProgress)}%</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* ==================== Top Navigation ==================== */}
-      <header className="topbar">
-        <a href="/" className="topbar__brand" title="AI Metadata Remover">
-          <img src={appIcon} alt="" className="topbar__logo" />
-          <div className="topbar__text">
-            <span className="topbar__title">AI Metadata Remover</span>
-            <span className="topbar__subtitle">by Dev Wonder</span>
+      {/* Top Navigation */}
+      <header className="flex items-center justify-between gap-4 pb-5 mb-8 border-b border-slate-200 dark:border-[#1e264a]">
+        <a href="/" className="flex items-center gap-3 text-slate-900 dark:text-slate-100 hover:opacity-90 transition-opacity min-w-0" title="AI Metadata Remover">
+          <img src={appIcon} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 shadow-md shadow-sky-500/20 border border-white/10" />
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">AI Metadata Remover</span>
+            <span className="text-xs font-semibold text-sky-600 dark:text-sky-400 tracking-wide mt-0.5">by Dev Wonder</span>
           </div>
         </a>
 
-        <nav className="topbar__actions">
+        <nav className="flex items-center gap-2 shrink-0">
           {/* Theme Toggle */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="topbar__icon-btn"
-            title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+          <button 
+            type="button" 
+            onClick={toggleTheme} 
+            className="w-9 h-9 inline-flex items-center justify-center rounded-full bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] text-slate-500 hover:text-sky-500 hover:border-sky-500/40 shadow-sm transition-all active:scale-95 cursor-pointer"
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
             aria-label="Toggle theme"
           >
-            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
           {/* Install / Update / Status */}
           {updateAvailable ? (
-            <button
-              type="button"
-              onClick={handleApplyUpdate}
-              className="topbar__chip topbar__chip--update"
+            <button 
+              type="button" 
+              onClick={handleApplyUpdate} 
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-600 dark:text-amber-400 shadow-sm transition-all cursor-pointer"
               title={`Update to v${remoteVersion}`}
             >
-              <span className="pulse-dot pulse-dot--amber" />
+              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 animate-pulse-amber" />
               <span>Update</span>
             </button>
           ) : isStandalone || isInstalled ? (
-            <button
-              type="button"
-              onClick={handleCheckUpdate}
-              className="topbar__chip"
+            <button 
+              type="button" 
+              onClick={handleCheckUpdate} 
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] text-slate-800 dark:text-slate-200 shadow-sm transition-all cursor-pointer"
               title={`v${currentVersion} — Check for updates`}
             >
-              <span className="pulse-dot pulse-dot--green" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse-green" />
               <span>App Installed</span>
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={handleInstallClick}
-              className="topbar__install-btn"
+            <button 
+              type="button" 
+              onClick={handleInstallClick} 
+              className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer"
               title="Install for offline use"
             >
               <Download size={14} />
@@ -701,52 +611,48 @@ export default function App() {
         </nav>
       </header>
 
-      {/* ==================== Main Content ==================== */}
-      <main className="main">
+      {/* Main Content */}
+      <main className="flex-1">
         {/* Hero Section */}
-        <section className="hero">
-          <div className="hero__badge">
+        <section className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25 mb-4">
             <ShieldCheck size={14} />
             <span>100% Client-Side · Your images never leave your browser</span>
           </div>
-          <h1 className="hero__title">AI Metadata Remover</h1>
-          <p className="hero__desc">
-            Remove hidden AI generation tags, C2PA Content Credentials,
-            Midjourney &amp; ChatGPT prompts, and camera EXIF data — losslessly,
-            in bulk.
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-3 leading-tight">
+            AI Metadata Remover
+          </h1>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto mb-6 leading-relaxed">
+            Remove hidden AI generation tags, C2PA Content Credentials, Midjourney &amp; ChatGPT prompts, and camera EXIF data — losslessly, in bulk.
           </p>
 
           {/* Stats Chips */}
-          <div className="stats-row">
-            <div className="stat-chip">
-              <span className="stat-dot stat-dot--cyan" />
-              <span>
-                <strong>{stats.images_cleaned.toLocaleString()}</strong> cleaned
-              </span>
+          <div className="flex justify-center items-center gap-2.5 flex-wrap mb-7">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs text-slate-500 dark:text-slate-400 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0" />
+              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">{stats.images_cleaned.toLocaleString()}</strong> cleaned</span>
             </div>
-            <div className="stat-chip">
-              <span className="stat-dot stat-dot--green" />
-              <span>
-                <strong>{stats.ai_detected_count.toLocaleString()}</strong> AI
-                traces
-              </span>
+            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs text-slate-500 dark:text-slate-400 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">{stats.ai_detected_count.toLocaleString()}</strong> AI traces</span>
             </div>
-            <div className="stat-chip">
-              <span className="stat-dot" />
-              <span>
-                <strong>0 MB</strong> uploaded
-              </span>
+            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs text-slate-500 dark:text-slate-400 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">0 MB</strong> uploaded</span>
             </div>
           </div>
         </section>
 
         {/* Dropzone */}
-        <div
-          className={`dropzone ${items.length > 0 ? "dropzone--compact" : ""} ${isDragOver ? "dropzone--active" : ""} ${recentUpload ? "dropzone--pulse" : ""}`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragOver(true);
-          }}
+        <div 
+          className={`flex flex-col items-center justify-center p-8 sm:p-11 bg-white dark:bg-[#11162e] border-2 border-dashed rounded-3xl cursor-pointer transition-all shadow-sm text-center relative ${
+            isDragOver 
+              ? 'border-sky-500 bg-sky-500/5 shadow-md' 
+              : recentUpload 
+              ? 'border-sky-500' 
+              : 'border-slate-200 dark:border-[#1e264a] hover:border-sky-500/70 hover:bg-slate-50/50 dark:hover:bg-[#141a38]/50 hover:shadow-md'
+          }`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
           onDragLeave={() => setIsDragOver(false)}
           onDrop={(e) => {
             e.preventDefault();
@@ -755,63 +661,56 @@ export default function App() {
           }}
           onClick={() => fileInputRef.current?.click()}
         >
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            multiple
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            style={{ display: 'none' }} 
+            multiple 
             accept="image/*,.heic,.heif,.avif"
             onChange={(e) => {
               if (e.target.files) addFiles(e.target.files);
-              e.target.value = "";
+              e.target.value = '';
             }}
           />
 
           {items.length === 0 ? (
             <>
-              <div className="dropzone__icon">
+              <div className="w-14 h-14 rounded-2xl bg-sky-500/10 text-sky-500 border border-sky-500/25 grid place-items-center mb-3.5">
                 <FolderDown size={28} />
               </div>
-              <div className="dropzone__title">
+              <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 mb-1.5">
                 Drag &amp; drop images here, or click to browse
               </div>
-              <div className="dropzone__desc">
+              <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-4">
                 JPG, PNG, WebP, HEIC, AVIF — zero quality loss
               </div>
-              <button
-                type="button"
-                className="dropzone__btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
+              <button 
+                type="button" 
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white font-bold text-sm rounded-full shadow-md shadow-sky-500/25 hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
               >
                 <Plus size={16} />
                 <span>Select Images</span>
               </button>
-              <div className="dropzone__hint">
-                or press <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> to paste from
-                clipboard
+              <div className="mt-3.5 text-xs text-slate-400 dark:text-slate-500">
+                or press <kbd className="bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] px-1.5 py-0.5 rounded font-mono text-[11px] text-slate-700 dark:text-slate-300">Ctrl+V</kbd> / <kbd className="bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] px-1.5 py-0.5 rounded font-mono text-[11px] text-slate-700 dark:text-slate-300">⌘V</kbd> to paste from clipboard
               </div>
             </>
           ) : (
-            <div className="dropzone__compact-row">
-              <div className="dropzone__compact-left">
-                <div className="dropzone__compact-icon">
+            <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3.5">
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 border border-sky-500/25 grid place-items-center shrink-0">
                   <FolderDown size={20} />
                 </div>
                 <div>
-                  <h4>Add more images</h4>
-                  <p>Drag &amp; drop or click · Ctrl+V to paste</p>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">Add more images</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Drag &amp; drop or click · Ctrl+V to paste</p>
                 </div>
               </div>
-              <button
-                type="button"
-                className="dropzone__compact-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
+              <button 
+                type="button" 
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-full bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] text-slate-900 dark:text-slate-100 hover:border-sky-500/50 hover:text-sky-500 transition-all cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
               >
                 <Plus size={15} />
                 <span>Browse</span>
@@ -821,48 +720,47 @@ export default function App() {
         </div>
 
         {/* Options Panel */}
-        <div className="options-panel">
-          <div className="options-panel__group">
-            <label className="option">
-              <input
-                type="checkbox"
-                checked={keepICC}
-                onChange={(e) => handleKeepICCChange(e.target.checked)}
+        <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-2xl shadow-sm mt-4">
+          <div className="flex flex-wrap items-center gap-5 sm:gap-6">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                checked={keepICC} 
+                onChange={(e) => handleKeepICCChange(e.target.checked)} 
+                className="w-4 h-4 mt-0.5 accent-sky-500 rounded cursor-pointer"
               />
-              <div className="option__body">
-                <div className="option__header">
-                  <span className="option__label">Keep original colors</span>
-                  <span className="pill pill--accent">Recommended</span>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-slate-100">Keep original colors</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25">Recommended</span>
                 </div>
-                <span className="option__hint">
-                  Preserves ICC color profile
-                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Preserves ICC color profile</span>
               </div>
             </label>
 
-            <label className="option">
-              <input
-                type="checkbox"
-                checked={unique}
-                onChange={(e) => handleUniqueChange(e.target.checked)}
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                checked={unique} 
+                onChange={(e) => handleUniqueChange(e.target.checked)} 
+                className="w-4 h-4 mt-0.5 accent-sky-500 rounded cursor-pointer"
               />
-              <div className="option__body">
-                <div className="option__header">
-                  <span className="option__label">Make each image unique</span>
-                  <span className="pill pill--muted">Optional</span>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-slate-100">Make each image unique</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#141a38] text-slate-500 border border-slate-200 dark:border-[#1e264a]">Optional</span>
                 </div>
-                <span className="option__hint">
-                  Invisible pixel tweaks alter file hash
-                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Invisible pixel tweaks alter file hash</span>
               </div>
             </label>
           </div>
 
-          <div className="options-panel__select">
-            <label>File Naming</label>
-            <select
-              value={nameMode}
+          <div className="flex flex-col gap-1 w-full sm:w-auto">
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">File Naming</label>
+            <select 
+              value={nameMode} 
               onChange={(e) => setNameMode(e.target.value)}
+              className="bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-sky-500 cursor-pointer"
             >
               <option value="suffix">photo-clean.jpg</option>
               <option value="keep">photo.jpg (original)</option>
@@ -871,25 +769,28 @@ export default function App() {
           </div>
         </div>
 
-        {/* Batch Action Bar */}
+        {/* Batch Bar */}
         {items.length > 0 && (
-          <div className="batch-bar">
-            <div className="batch-bar__status">
-              <CheckCircle2 size={18} color="var(--accent)" />
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-2xl shadow-sm mt-4">
+            <div className="flex items-center gap-2 text-sm text-slate-900 dark:text-slate-100">
+              <CheckCircle2 size={18} className="text-sky-500" />
               <span>
                 <strong>{doneCount}</strong> / {items.length} cleaned
                 {processingCount > 0 && ` · ${processingCount} in progress…`}
               </span>
             </div>
-            <div className="batch-bar__actions">
-              <button className="btn btn--ghost" onClick={handleClearAll}>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <button 
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-full bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#1e264a] transition-all cursor-pointer"
+                onClick={handleClearAll}
+              >
                 <RefreshCw size={14} />
                 <span>Clear</span>
               </button>
               {doneCount > 1 && (
-                <button
-                  className="btn btn--filled"
-                  disabled={doneCount === 0 || processingCount > 0}
+                <button 
+                  className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white shadow-sm hover:shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  disabled={doneCount === 0 || processingCount > 0} 
                   onClick={handleDownloadAll}
                 >
                   <Download size={15} />
@@ -901,55 +802,57 @@ export default function App() {
         )}
 
         {/* Image Results */}
-        <div className="results">
+        <div className="flex flex-col gap-2.5 mt-3.5">
           {items.map((it, idx) => {
             const outName = generateOutputName(it, idx);
-            const aiCount =
-              (it.out?.ai ? it.out.ai.length : 0) + (it.nameAI?.length ? 1 : 0);
+            const aiCount = (it.out?.ai ? it.out.ai.length : 0) + (it.nameAI?.length ? 1 : 0);
 
             return (
-              <div key={it.id} className="card">
-                <div className="card__row">
-                  <div className="card__thumb">
-                    <img src={it.url || URL.createObjectURL(it.file)} alt="" />
+              <div key={it.id} className="bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-2xl p-3.5 shadow-sm hover:border-sky-500/40 hover:shadow-md transition-all">
+                <div className="grid grid-cols-[48px_1fr] sm:grid-cols-[48px_1fr_auto] items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] shrink-0">
+                    <img src={it.url || URL.createObjectURL(it.file)} alt="" className="w-full h-full object-cover" />
                   </div>
-                  <div className="card__info">
-                    <div className="card__name">{outName}</div>
-                    <div className="card__meta">
-                      {it.status === "done"
+                  <div className="min-w-0">
+                    <div className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">{outName}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {it.status === 'done' 
                         ? `${formatBytes(it.file.size)} → ${formatBytes(it.out.bytes.length)} · ${it.out.method}`
-                        : `${formatBytes(it.file.size)} · ${it.status === "processing" ? "Cleaning…" : "Queued"}`}
+                        : `${formatBytes(it.file.size)} · ${it.status === 'processing' ? 'Cleaning…' : 'Queued'}`
+                      }
                     </div>
-                    <div className="card__tags">
-                      {it.status === "processing" && (
-                        <span className="tag tag--processing">
-                          <RefreshCw size={11} className="spin" />
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {it.status === 'processing' && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25">
+                          <RefreshCw size={11} className="animate-spin" />
                           Processing
                         </span>
                       )}
-                      {it.status === "done" && (
+                      {it.status === 'done' && (
                         <>
                           {aiCount > 0 ? (
-                            <span className="tag tag--ai">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                               <Sparkles size={11} />
                               AI Found ({aiCount})
                             </span>
                           ) : (
-                            <span className="tag">No AI</span>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#141a38] text-slate-500">
+                              No AI
+                            </span>
                           )}
-                          <span className="tag">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#141a38] text-slate-500">
                             {it.out.removed.length} removed
                           </span>
                           {it.out.verified && (
-                            <span className="tag tag--clean">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25">
                               <CheckCircle2 size={11} />
                               Clean
                             </span>
                           )}
                         </>
                       )}
-                      {it.status === "error" && (
-                        <span className="tag tag--error">
+                      {it.status === 'error' && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
                           <AlertCircle size={11} />
                           {it.error}
                         </span>
@@ -957,50 +860,36 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="card__actions">
-                    {it.status === "done" && (
+                  <div className="col-span-2 sm:col-span-1 flex items-center justify-end gap-1.5 mt-2 sm:mt-0">
+                    {it.status === 'done' && (
                       <>
-                        <button
-                          className="btn btn--sm"
-                          onClick={() =>
-                            setItems((prev) =>
-                              prev.map((x) =>
-                                x.id === it.id ? { ...x, open: !x.open } : x,
-                              ),
-                            )
-                          }
+                        <button 
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-full bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] text-slate-800 dark:text-slate-200 hover:border-sky-500/50 hover:text-sky-500 transition-all cursor-pointer" 
+                          onClick={() => setItems(prev => prev.map(x => x.id === it.id ? { ...x, open: !x.open } : x))}
                         >
-                          {it.open ? (
-                            <ChevronUp size={13} />
-                          ) : (
-                            <ChevronDown size={13} />
-                          )}
-                          <span className="btn__label-desktop">
-                            {it.open ? "Hide" : "Inspect"}
-                          </span>
+                          {it.open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                          <span className="hidden sm:inline">{it.open ? 'Hide' : 'Inspect'}</span>
                         </button>
-                        <button
-                          className="btn btn--sm"
+                        <button 
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-full bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] text-slate-800 dark:text-slate-200 hover:border-sky-500/50 hover:text-sky-500 transition-all cursor-pointer"
                           onClick={() => handleCopy(it)}
                         >
                           <Copy size={13} />
-                          <span className="btn__label-desktop">
-                            {copiedId === it.id ? "Copied!" : "Copy"}
-                          </span>
+                          <span className="hidden sm:inline">{copiedId === it.id ? 'Copied!' : 'Copy'}</span>
                         </button>
-                        <a
-                          className="btn btn--sm btn--accent"
-                          href={it.url}
+                        <a 
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white shadow-sm transition-all cursor-pointer"
+                          href={it.url} 
                           download={outName}
                         >
                           <Download size={13} />
-                          <span className="btn__label-desktop">Download</span>
+                          <span className="hidden sm:inline">Download</span>
                         </a>
                       </>
                     )}
-                    <button
-                      className="btn btn--icon-only btn--danger-hover"
-                      title="Remove"
+                    <button 
+                      className="w-8 h-8 rounded-full grid place-items-center text-slate-400 hover:bg-rose-500/15 hover:text-rose-500 transition-all cursor-pointer" 
+                      title="Remove" 
                       onClick={() => removeItem(it.id)}
                     >
                       <Trash2 size={15} />
@@ -1010,18 +899,16 @@ export default function App() {
 
                 {/* Expandable Details */}
                 {it.open && it.out && (
-                  <div className="card__details">
-                    <div className="detail-col">
-                      <h4>Detected</h4>
-                      <ul>
+                  <div className="mt-3 pt-3 border-t border-slate-200 dark:border-[#1e264a] grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
+                    <div>
+                      <h4 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">Detected</h4>
+                      <ul className="flex flex-col gap-1 text-slate-600 dark:text-slate-400">
                         {it.out.ai && it.out.ai.length > 0 ? (
                           it.out.ai.map((d, i) => (
                             <li key={i}>
-                              <strong>{d.name}</strong>
+                              <strong className="text-slate-900 dark:text-slate-100 font-semibold">{d.name}</strong>
                               {d.evidence.map((ev, k) => (
-                                <span key={k} className="evidence">
-                                  {ev}
-                                </span>
+                                <span key={k} className="block font-mono text-[11px] bg-slate-100 dark:bg-[#141a38] p-1 rounded text-amber-500 break-all mt-0.5">{ev}</span>
                               ))}
                             </li>
                           ))
@@ -1030,26 +917,26 @@ export default function App() {
                         )}
                         {it.nameAI && it.nameAI.length > 0 && (
                           <li>
-                            <strong>Filename: {it.nameAI.join(", ")}</strong>
-                            <span className="evidence">{it.file.name}</span>
+                            <strong className="text-slate-900 dark:text-slate-100 font-semibold">Filename: {it.nameAI.join(', ')}</strong>
+                            <span className="block font-mono text-[11px] bg-slate-100 dark:bg-[#141a38] p-1 rounded text-amber-500 break-all mt-0.5">{it.file.name}</span>
                           </li>
                         )}
                       </ul>
                     </div>
-                    <div className="detail-col">
-                      <h4>Removed</h4>
-                      <ul>
+                    <div>
+                      <h4 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">Removed</h4>
+                      <ul className="flex flex-col gap-1 text-slate-600 dark:text-slate-400">
                         {it.out.removed.map((r, i) => (
                           <li key={i}>
-                            <strong>{r.label}</strong>
-                            {r.bytes ? ` (${formatBytes(r.bytes)})` : ""}
+                            <strong className="text-slate-900 dark:text-slate-100 font-semibold">{r.label}</strong>
+                            {r.bytes ? ` (${formatBytes(r.bytes)})` : ''}
                           </li>
                         ))}
                       </ul>
                     </div>
-                    <div className="detail-col">
-                      <h4>Kept</h4>
-                      <ul>
+                    <div>
+                      <h4 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">Kept</h4>
+                      <ul className="flex flex-col gap-1 text-slate-600 dark:text-slate-400">
                         {it.out.kept.map((k, i) => (
                           <li key={i}>✓ {k}</li>
                         ))}
@@ -1063,53 +950,53 @@ export default function App() {
         </div>
 
         {/* FAQ */}
-        <section className="faq">
-          <h3 className="faq__heading">Frequently Asked Questions</h3>
-          <div className="faq__list">
+        <section className="mt-14 max-w-2xl mx-auto w-full">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 text-center mb-4">Frequently Asked Questions</h3>
+          <div className="flex flex-col gap-2">
             {[
               {
                 q: "Does this tool upload my images anywhere?",
-                a: "No. Everything runs 100% inside your browser using client-side binary parsing. Your images never touch any server, and the tool works completely offline as a PWA.",
+                a: "No. Everything runs 100% inside your browser using client-side binary parsing. Your images never touch any server, and the tool works completely offline as a PWA."
               },
               {
                 q: "Does removing metadata reduce image quality?",
-                a: "No. For JPG, PNG, and WebP, the cleaning is completely lossless. Pixel data is untouched — only metadata chunks (EXIF, XMP, C2PA) are stripped.",
+                a: "No. For JPG, PNG, and WebP, the cleaning is completely lossless. Pixel data is untouched — only metadata chunks (EXIF, XMP, C2PA) are stripped."
               },
               {
                 q: "Can it remove pixel watermarks like SynthID?",
-                a: "No. SynthID embeds watermarks directly into pixel values. No metadata remover can remove that without degrading the image.",
+                a: "No. SynthID embeds watermarks directly into pixel values. No metadata remover can remove that without degrading the image."
               },
               {
                 q: "What does 'Make each image unique' do?",
-                a: "It injects imperceptible noise into ~25% of pixels (±1 color channel), completely altering the file hash while remaining invisible to the eye.",
-              },
+                a: "It injects imperceptible noise into ~25% of pixels (±1 color channel), completely altering the file hash while remaining invisible to the eye."
+              }
             ].map((item, idx) => (
-              <div key={idx} className="faq__item">
-                <button
-                  type="button"
-                  className="faq__q"
+              <div key={idx} className="bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-2xl overflow-hidden shadow-sm hover:border-sky-500/30 transition-colors">
+                <button 
+                  type="button" 
+                  className="w-full px-4 py-3.5 flex justify-between items-center text-left text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-sky-500 gap-3 cursor-pointer"
                   onClick={() => setFaqOpen(faqOpen === idx ? null : idx)}
                 >
                   <span>{item.q}</span>
-                  {faqOpen === idx ? (
-                    <ChevronUp size={16} />
-                  ) : (
-                    <ChevronDown size={16} />
-                  )}
+                  {faqOpen === idx ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
-                {faqOpen === idx && <div className="faq__a">{item.a}</div>}
+                {faqOpen === idx && (
+                  <div className="px-4 pb-3.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-[#141a38] pt-2.5">
+                    {item.a}
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </section>
       </main>
 
-      {/* ==================== Footer ==================== */}
-      <footer className="footer">
-        <div className="footer__top">
+      {/* Footer (2-Column + Bottom Bar Layout) */}
+      <footer className="mt-16 pt-8 border-t border-slate-200 dark:border-[#1e264a] flex flex-col gap-6 w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-6 w-full text-center sm:text-left">
           {/* Left Side: Open source initiative by Dev Wonder */}
-          <div className="footer__initiative-section">
-            <span className="footer__initiative-label">
+          <div className="flex flex-col items-center sm:items-start gap-2">
+            <span className="text-xs uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
               An open source initiative by
             </span>
 
@@ -1117,57 +1004,60 @@ export default function App() {
               href="https://www.devwonderbd.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="footer__dw-link"
+              className="inline-flex items-center gap-3 text-slate-900 dark:text-slate-100 hover:opacity-90 transition-opacity"
               title="Dev Wonder - Simplifying Tech"
             >
               <img
                 src={devWonderEmblem}
                 alt="Dev Wonder"
-                className="footer__dw-logo"
+                className="h-9 w-auto object-contain"
               />
-              <div className="footer__dw-text">
-                <span className="footer__dw-name">Dev Wonder</span>
-                <span className="footer__dw-slogan">Simplifying Tech</span>
+              <div className="flex flex-col text-left">
+                <span className="font-bold text-sm text-slate-900 dark:text-slate-100 leading-tight">Dev Wonder</span>
+                <span className="text-xs font-semibold text-sky-500 tracking-wide mt-0.5">Simplifying Tech</span>
               </div>
             </a>
           </div>
 
           {/* Right Side: GitHub Star button and repository links */}
-          <div className="footer__github-section">
+          <div className="flex flex-col items-center sm:items-end gap-3">
             <a
               href="https://github.com/DevWonderBD/ai-metadata-remover"
               target="_blank"
               rel="noopener noreferrer"
-              className="footer__github-star-btn"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] text-slate-900 dark:text-slate-100 shadow-sm hover:border-sky-400 hover:text-sky-500 transition-all cursor-pointer"
               title="Star on GitHub"
             >
               <Star size={14} fill="currentColor" />
               <span>Star on GitHub</span>
             </a>
 
-            <nav className="footer__nav" aria-label="Footer links">
+            <nav className="flex items-center justify-center sm:justify-end gap-3 text-xs text-slate-500 dark:text-slate-400" aria-label="Footer links">
               <a
                 href="https://github.com/DevWonderBD/ai-metadata-remover"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-sky-500 transition-colors"
               >
                 <GithubIcon size={14} />
                 <span>GitHub</span>
               </a>
-              <span className="footer__nav-dot">·</span>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
               <a
                 href="https://github.com/DevWonderBD/ai-metadata-remover/blob/main/LICENSE"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-sky-500 transition-colors"
               >
                 <ExternalLink size={12} />
                 <span>MIT License</span>
               </a>
-              <span className="footer__nav-dot">·</span>
+              <span className="text-slate-300 dark:text-slate-700">·</span>
               <a
                 href="https://github.com/DevWonderBD/ai-metadata-remover/issues"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-sky-500 transition-colors"
               >
                 <ExternalLink size={12} />
                 <span>Report Issue</span>
@@ -1177,34 +1067,39 @@ export default function App() {
         </div>
 
         {/* Bottom Bar: Copyright on Left, Version on Right */}
-        <div className="footer__bottom-section">
-          <p className="footer__copyright">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2.5 pt-5 border-t border-slate-200 dark:border-[#1e264a] w-full text-xs text-slate-500">
+          <p className="m-0">
             © {new Date().getFullYear()} AI Metadata Remover.
           </p>
-          <div className="footer__version-wrap">
-            <span className="footer__version-badge">v{currentVersion}</span>
+          <div className="flex items-center">
+            <span className="font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] text-slate-600 dark:text-slate-400">
+              v{currentVersion}
+            </span>
           </div>
         </div>
       </footer>
 
-      {/* ==================== Install Guide Modal ==================== */}
+      {/* Install Guide Modal */}
       {showInstallModal && (
         <div
-          className="modal-backdrop"
+          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setShowInstallModal(false)}
         >
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal__header">
-              <div className="modal__title-row">
-                <img src={appIcon} alt="" className="modal__icon" />
+          <div 
+            className="bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-3xl max-w-md w-full shadow-2xl overflow-hidden" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 dark:border-[#1e264a]">
+              <div className="flex items-center gap-3">
+                <img src={appIcon} alt="" className="w-9 h-9 rounded-xl object-cover" />
                 <div>
-                  <h3>AI Metadata Remover</h3>
-                  <p>Dev Wonder Open Source</p>
+                  <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-slate-100">AI Metadata Remover</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Dev Wonder Open Source</p>
                 </div>
               </div>
-              <button
-                type="button"
-                className="modal__close"
+              <button 
+                type="button" 
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#141a38] transition-all cursor-pointer"
                 onClick={() => setShowInstallModal(false)}
               >
                 <X size={18} />
@@ -1212,57 +1107,46 @@ export default function App() {
             </div>
 
             {isInstalled || isStandalone ? (
-              <div className="modal__body modal__body--center">
-                <div className="modal__success-icon">
-                  <CheckCircle2 size={30} color="var(--accent)" />
+              <div className="p-6 text-center">
+                <div className="w-13 h-13 rounded-full bg-sky-500/10 border border-sky-500/25 grid place-items-center mx-auto mb-3 text-sky-500">
+                  <CheckCircle2 size={30} />
                 </div>
-                <h4>Already Installed!</h4>
-                <p>Open from your App Drawer or Application Launcher.</p>
-                <div className="modal__hint-box">
-                  💡 <strong>Reinstall?</strong> Uninstall the existing app
-                  first, then reload this page.
+                <h4 className="font-bold text-base text-slate-900 dark:text-slate-100 mb-1">Already Installed!</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Open from your App Drawer or Application Launcher.</p>
+                <div className="bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-xl p-3 text-left text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  💡 <strong>Reinstall?</strong> Uninstall the existing app first, then reload this page.
                 </div>
               </div>
             ) : (
-              <div className="modal__body">
-                <div className="modal__step">
-                  <Monitor size={20} className="modal__step-icon" />
+              <div className="p-4 sm:p-5 flex flex-col gap-3">
+                <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-xl">
+                  <Monitor size={20} className="text-sky-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4>Desktop (Chrome / Brave / Edge)</h4>
-                    <p>
-                      Click the <strong>Install icon (⊕ / 📥)</strong> in the
-                      address bar, or browser menu →{" "}
-                      <em>Install AI Metadata Remover</em>.
-                    </p>
+                    <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 mb-0.5">Desktop (Chrome / Brave / Edge)</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">Click the <strong>Install icon (⊕ / 📥)</strong> in the address bar, or browser menu → <em>Install AI Metadata Remover</em>.</p>
                   </div>
                 </div>
-                <div className="modal__step">
-                  <Smartphone size={20} className="modal__step-icon" />
+                <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-xl">
+                  <Smartphone size={20} className="text-sky-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4>iPhone &amp; iPad (Safari)</h4>
-                    <p>
-                      Tap <strong>Share</strong> → scroll down →{" "}
-                      <strong>Add to Home Screen (+)</strong>.
-                    </p>
+                    <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 mb-0.5">iPhone &amp; iPad (Safari)</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">Tap <strong>Share</strong> → scroll down → <strong>Add to Home Screen (+)</strong>.</p>
                   </div>
                 </div>
-                <div className="modal__step">
-                  <Smartphone size={20} className="modal__step-icon" />
+                <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-xl">
+                  <Smartphone size={20} className="text-sky-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4>Android (Chrome / Brave)</h4>
-                    <p>
-                      Tap <strong>⋮ menu</strong> → <strong>Install app</strong>
-                      .
-                    </p>
+                    <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 mb-0.5">Android (Chrome / Brave)</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">Tap <strong>⋮ menu</strong> → <strong>Install app</strong>.</p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="modal__footer">
-              <button
-                type="button"
-                className="btn btn--filled"
+            <div className="p-4 sm:p-5 pt-0 flex justify-end">
+              <button 
+                type="button" 
+                className="px-5 py-2 rounded-full text-xs font-bold bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white shadow-sm transition-all cursor-pointer"
                 onClick={() => setShowInstallModal(false)}
               >
                 Got it
