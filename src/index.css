@@ -8,10 +8,16 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Base Body Styles */
+/* Base Body Styles with Subtle Modern Tech Grid & Ambient Aura */
 html, body {
   font-family: var(--font-sans);
-  background-color: #eef2f6; /* Soothing, eye-friendly off-white tint — eliminates glare */
+  background-color: #eef2f6; /* Soothing, eye-friendly off-white base */
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+    radial-gradient(#cbd5e1 0.85px, transparent 0.85px);
+  background-size: 100% 100%, 100% 100%, 24px 24px;
+  background-attachment: fixed;
   color: #0f172a;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -19,6 +25,12 @@ html, body {
 
 [data-theme="dark"], [data-theme="dark"] body {
   background-color: #090d1f;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+    radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 28px 28px;
+  background-attachment: fixed;
   color: #f1f5f9;
 }
 
