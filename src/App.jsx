@@ -13,8 +13,8 @@ import {
   ChevronUp, 
   Star,
   Plus,
-  Layers,
-  Sparkles
+  Sparkles,
+  Info
 } from 'lucide-react';
 
 import { cleanBytes } from './core/stripper.js';
@@ -54,8 +54,7 @@ export default function App() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
 
-  // Interactive filename tester state
-  const [testFileName, setTestFileName] = useState('ChatGPT Image Oct 14.png');
+  // FAQ accordion state
   const [faqOpen, setFaqOpen] = useState(null);
 
   const fileInputRef = useRef(null);
@@ -147,7 +146,7 @@ export default function App() {
             particleCount: 50,
             spread: 65,
             origin: { y: 0.65 },
-            colors: ['#34cc5f', '#34b8c1', '#10b981', '#6366f1']
+            colors: ['#06b6d4', '#10b981', '#38bdf8', '#34d399']
           });
         }
       }, 200);
@@ -310,17 +309,14 @@ export default function App() {
   const doneCount = items.filter(it => it.status === 'done').length;
   const processingCount = items.filter(it => it.status === 'processing' || it.status === 'queued').length;
 
-  // Filename AI tester logic
-  const detectedTestAI = detectFileNameAI(testFileName);
-
   return (
     <div className="app-container">
       {/* Toast Notifications Container */}
       <div className="toast-container">
         {toasts.map(t => (
           <div key={t.id} className={`toast ${t.type}`}>
-            {t.type === 'success' && <CheckCircle2 size={16} color="#34cc5f" />}
-            {t.type === 'info' && <FolderDown size={16} color="#06b6d4" />}
+            {t.type === 'success' && <CheckCircle2 size={16} color="#06b6d4" />}
+            {t.type === 'info' && <FolderDown size={16} color="#38bdf8" />}
             {t.type === 'error' && <AlertCircle size={16} color="#ef4444" />}
             <span>{t.message}</span>
           </div>
@@ -331,7 +327,7 @@ export default function App() {
       <header className="navbar">
         <a href="https://www.devwonderbd.com" target="_blank" rel="noopener noreferrer" className="brand">
           <div className="brand-emblem-wrap">
-            <img src={devWonderEmblem} alt="Dev Wonder Emblem" className="brand-logo" />
+            <img src={devWonderEmblem} alt="Dev Wonder" className="brand-logo" />
           </div>
           <div className="brand-info">
             <span className="brand-title">Dev Wonder</span>
@@ -345,7 +341,7 @@ export default function App() {
             className="install-app-btn"
             title="Install app to your device for offline use"
           >
-            <Download size={15} />
+            <Download size={14} />
             <span>{isInstalled ? 'App Installed' : 'Install App'}</span>
           </button>
         </div>
@@ -354,7 +350,7 @@ export default function App() {
       {/* Hero */}
       <section className="hero">
         <div className="hero-pill">
-          <ShieldCheck size={15} />
+          <ShieldCheck size={14} />
           <span>100% Client-Side: Your images never leave your browser</span>
         </div>
         <h1>AI Metadata Remover</h1>
@@ -365,11 +361,11 @@ export default function App() {
         {/* Minimal 3-Item Clean Stats Bar */}
         <div className="stats-bar">
           <div className="stat-item">
-            <span className="stat-dot green"></span>
+            <span className="stat-dot cyan"></span>
             <span><strong>{stats.images_cleaned.toLocaleString()}</strong> images cleaned</span>
           </div>
           <div className="stat-item">
-            <span className="stat-dot cyan"></span>
+            <span className="stat-dot green"></span>
             <span><strong>{stats.ai_detected_count.toLocaleString()}</strong> AI traces stripped</span>
           </div>
           <div className="stat-item">
@@ -422,46 +418,55 @@ export default function App() {
           <>
             <div className="compact-content">
               <div className="compact-icon">
-                <Plus size={20} />
+                <FolderDown size={22} />
               </div>
               <div className="compact-text">
-                <h4>Drop more images here to clean</h4>
-                <p>or click to browse from device (Ctrl+V supported)</p>
+                <h4>Add more images to clean</h4>
+                <p>Drag & drop files or click to add (supports JPG, PNG, WebP · Ctrl+V)</p>
               </div>
             </div>
             <button type="button" className="compact-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-              + Add More
+              <Plus size={15} />
+              <span>Browse Files</span>
             </button>
           </>
         )}
       </div>
 
-      {/* Options Bar */}
+      {/* Options Bar with Clear Friendly Explanations */}
       <div className="options-bar">
         <div className="options-group">
-          <label className="option-checkbox">
+          <label className="option-item">
             <input 
               type="checkbox" 
               checked={keepICC} 
               onChange={(e) => handleKeepICCChange(e.target.checked)} 
             />
-            <span>Keep original color profile (ICC)</span>
+            <div className="option-content">
+              <span className="option-title">Keep original colors</span>
+              <span className="option-desc">Preserves display color profile (recommended)</span>
+            </div>
           </label>
-          <label className="option-checkbox">
+
+          <label className="option-item">
             <input 
               type="checkbox" 
               checked={unique} 
               onChange={(e) => handleUniqueChange(e.target.checked)} 
             />
-            <span>Make each image unique <small style={{ color: 'var(--text-subtle)' }}>(imperceptible noise)</small></span>
+            <div className="option-content">
+              <span className="option-title">Make each image unique</span>
+              <span className="option-desc">Invisible pixel tweaks to alter duplicate file hash</span>
+            </div>
           </label>
         </div>
-        <div className="option-select">
-          <span style={{ color: 'var(--text-muted)' }}>Naming:</span>
+
+        <div className="option-select-wrap">
+          <label>File Naming:</label>
           <select value={nameMode} onChange={(e) => setNameMode(e.target.value)}>
-            <option value="suffix">photo-clean.jpg</option>
-            <option value="keep">Same as original</option>
-            <option value="rename">image-001, image-002…</option>
+            <option value="suffix">photo-clean.jpg (Adds -clean suffix)</option>
+            <option value="keep">photo.jpg (Keep original name)</option>
+            <option value="rename">image-001.jpg (Sequential numbering)</option>
           </select>
         </div>
       </div>
@@ -470,7 +475,7 @@ export default function App() {
       {items.length > 0 && (
         <div className="batch-bar">
           <div className="batch-stats">
-            <CheckCircle2 size={18} color="#34cc5f" />
+            <CheckCircle2 size={18} color="var(--accent)" />
             <span>
               <strong>{doneCount}</strong> of {items.length} image{items.length > 1 ? 's' : ''} cleaned
               {processingCount > 0 && ` · cleaning ${processingCount} in progress…`}
@@ -481,15 +486,18 @@ export default function App() {
               <RefreshCw size={14} />
               <span>Start over</span>
             </button>
-            <button className="btn-primary" disabled={doneCount === 0 || processingCount > 0} onClick={handleDownloadAll}>
-              <Download size={15} />
-              <span>Download All (.ZIP)</span>
-            </button>
+            {/* Show ZIP only when there are multiple images */}
+            {doneCount > 1 && (
+              <button className="btn-primary" disabled={doneCount === 0 || processingCount > 0} onClick={handleDownloadAll}>
+                <Download size={15} />
+                <span>Download All ({doneCount}) as ZIP</span>
+              </button>
+            )}
           </div>
         </div>
       )}
 
-      {/* Image Rows List - Directly visible without scrolling */}
+      {/* Image Rows List - Directly visible right below without scrolling */}
       <div className="image-list">
         {items.map((it, idx) => {
           const doneList = items.filter(x => x.status === 'done');
@@ -570,7 +578,7 @@ export default function App() {
                       </button>
                       <a 
                         className="action-btn-sm" 
-                        style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)', color: '#0c0e14', borderColor: 'transparent', fontWeight: 700 }}
+                        style={{ background: 'linear-gradient(135deg, #06b6d4, #10b981)', color: '#0c0e14', borderColor: 'transparent', fontWeight: 700 }}
                         href={it.url} 
                         download={outName}
                       >
@@ -642,50 +650,6 @@ export default function App() {
           );
         })}
       </div>
-
-      {/* Interactive AI File Name Detector */}
-      <section className="filename-widget">
-        <h3>File Name AI Analyzer</h3>
-        <p>AI tools like ChatGPT, Midjourney, and Gemini often label their output directly in the filename.</p>
-        <div className="filename-input-wrap">
-          <input 
-            type="text" 
-            className="filename-input" 
-            value={testFileName}
-            onChange={(e) => setTestFileName(e.target.value)}
-            placeholder="Type any image filename..."
-          />
-        </div>
-        <div className="filename-result-grid">
-          <div className="fn-res-item">
-            <span>Detected Tool:</span>
-            <strong className={detectedTestAI.length ? 'warn' : 'ok'}>
-              {detectedTestAI.length ? detectedTestAI.join(', ') : 'No AI tool named'}
-            </strong>
-          </div>
-          <div className="fn-res-item">
-            <span>Cleaned as (Suffix):</span>
-            <strong>{testFileName.replace(/(\.[^.]+)$/, '')}-clean.jpg</strong>
-          </div>
-          <div className="fn-res-item">
-            <span>Cleaned as (Sequential):</span>
-            <strong>image-001.jpg</strong>
-          </div>
-        </div>
-        <div className="fn-samples">
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', alignSelf: 'center' }}>Try samples:</span>
-          {['ChatGPT Image Oct 14.png', 'midjourney_cyberpunk_v6.jpg', 'Gemini_Generated_Image_8a.png', 'family_vacation_photo.jpg'].map(sample => (
-            <button 
-              key={sample} 
-              type="button" 
-              className="fn-sample-btn"
-              onClick={() => setTestFileName(sample)}
-            >
-              {sample}
-            </button>
-          ))}
-        </div>
-      </section>
 
       {/* FAQ Accordion */}
       <section className="faq-sec">

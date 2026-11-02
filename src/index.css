@@ -9,16 +9,20 @@
   --bg-card-hover: #181d26;
   --bg-card-subtle: #1a202c;
   --border: #232936;
-  --border-focus: #4f46e5;
+  --border-focus: #06b6d4;
   
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
   --text-subtle: #64748b;
 
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
-  --accent-soft: rgba(99, 102, 241, 0.12);
-  --accent-border: rgba(99, 102, 241, 0.35);
+  /* Dev Wonder Primary Cyan Palette */
+  --accent: #06b6d4;
+  --accent-hover: #0891b2;
+  --accent-soft: rgba(6, 182, 212, 0.12);
+  --accent-border: rgba(6, 182, 212, 0.35);
+
+  --brand-cyan: #06b6d4;
+  --brand-green: #10b981;
 
   --success: #10b981;
   --success-soft: rgba(16, 185, 129, 0.12);
