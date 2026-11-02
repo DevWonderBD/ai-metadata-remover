@@ -511,7 +511,7 @@ export default function App() {
   const processingCount = items.filter(it => it.status === 'processing' || it.status === 'queued').length;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20 min-h-screen flex flex-col relative">
+    <div className="w-full sm:w-[94%] lg:w-[85%] max-w-[1260px] mx-auto px-4 sm:px-6 py-6 pb-20 min-h-screen flex flex-col relative">
       {/* Toast Stack */}
       <div className="fixed top-5 right-5 z-50 flex flex-col gap-2.5 pointer-events-none max-w-sm w-full">
         {toasts.map(t => (
@@ -560,7 +560,9 @@ export default function App() {
           <img src={appIcon} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 shadow-md shadow-sky-500/20 border border-white/10" />
           <div className="flex flex-col min-w-0">
             <span className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100 leading-tight truncate">AI Metadata Remover</span>
-            <span className="text-xs font-semibold text-sky-600 dark:text-sky-400 tracking-wide mt-0.5">by Dev Wonder</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1 font-medium">
+              by <span className="font-['Syne',sans-serif] font-bold uppercase tracking-[0.06em] text-slate-900 dark:text-white">DEV WONDER</span>
+            </span>
           </div>
         </a>
 
@@ -617,28 +619,28 @@ export default function App() {
         <section className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25 mb-4">
             <ShieldCheck size={14} />
-            <span>100% Client-Side · Your images never leave your browser</span>
+            <span>100% Private · Your photos never leave your device</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-3 leading-tight">
             AI Metadata Remover
           </h1>
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto mb-6 leading-relaxed">
-            Remove hidden AI generation tags, C2PA Content Credentials, Midjourney &amp; ChatGPT prompts, and camera EXIF data — losslessly, in bulk.
+            Clean hidden AI traces, prompts, camera details, and location data from your photos in seconds. Free, lossless, and works completely offline.
           </p>
 
           {/* Stats Chips */}
           <div className="flex justify-center items-center gap-2.5 flex-wrap mb-7">
             <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs text-slate-500 dark:text-slate-400 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0" />
-              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">{stats.images_cleaned.toLocaleString()}</strong> cleaned</span>
+              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">{stats.images_cleaned.toLocaleString()}</strong> photos cleaned</span>
             </div>
             <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs text-slate-500 dark:text-slate-400 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">{stats.ai_detected_count.toLocaleString()}</strong> AI traces</span>
+              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">{stats.ai_detected_count.toLocaleString()}</strong> AI traces removed</span>
             </div>
             <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-full text-xs text-slate-500 dark:text-slate-400 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
-              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">0 MB</strong> uploaded</span>
+              <span><strong className="text-slate-900 dark:text-slate-100 font-bold">0 B</strong> uploaded · 100% local</span>
             </div>
           </div>
         </section>
@@ -679,10 +681,10 @@ export default function App() {
                 <FolderDown size={28} />
               </div>
               <div className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 mb-1.5">
-                Drag &amp; drop images here, or click to browse
+                Drop your photos here, or click to choose files
               </div>
               <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-4">
-                JPG, PNG, WebP, HEIC, AVIF — zero quality loss
+                Supports JPG, PNG, WebP, HEIC &amp; AVIF · Zero quality loss
               </div>
               <button 
                 type="button" 
@@ -703,8 +705,8 @@ export default function App() {
                   <FolderDown size={20} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">Add more images</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Drag &amp; drop or click · Ctrl+V to paste</p>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">Add more photos</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Drop files here, click to browse, or paste with Ctrl+V</p>
                 </div>
               </div>
               <button 
@@ -713,7 +715,7 @@ export default function App() {
                 onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
               >
                 <Plus size={15} />
-                <span>Browse</span>
+                <span>Add More</span>
               </button>
             </div>
           )}
@@ -734,7 +736,7 @@ export default function App() {
                   <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-slate-100">Keep original colors</span>
                   <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25">Recommended</span>
                 </div>
-                <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Preserves ICC color profile</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Preserves true photo colors without any tint shift</span>
               </div>
             </label>
 
@@ -747,24 +749,24 @@ export default function App() {
               />
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-slate-100">Make each image unique</span>
+                  <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-slate-100">Make each file unique</span>
                   <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#141a38] text-slate-500 border border-slate-200 dark:border-[#1e264a]">Optional</span>
                 </div>
-                <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Invisible pixel tweaks alter file hash</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Adds invisible tweaks so platforms see it as a brand-new file</span>
               </div>
             </label>
           </div>
 
           <div className="flex flex-col gap-1 w-full sm:w-auto">
-            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">File Naming</label>
+            <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Save files as</label>
             <select 
               value={nameMode} 
               onChange={(e) => setNameMode(e.target.value)}
               className="bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-sky-500 cursor-pointer"
             >
-              <option value="suffix">photo-clean.jpg</option>
-              <option value="keep">photo.jpg (original)</option>
-              <option value="rename">image-001.jpg (sequential)</option>
+              <option value="suffix">photo-clean.jpg (Cleaned suffix)</option>
+              <option value="keep">photo.jpg (Keep original name)</option>
+              <option value="rename">image-001.jpg (Numbered)</option>
             </select>
           </div>
         </div>
@@ -775,8 +777,8 @@ export default function App() {
             <div className="flex items-center gap-2 text-sm text-slate-900 dark:text-slate-100">
               <CheckCircle2 size={18} className="text-sky-500" />
               <span>
-                <strong>{doneCount}</strong> / {items.length} cleaned
-                {processingCount > 0 && ` · ${processingCount} in progress…`}
+                <strong>{doneCount}</strong> of {items.length} photos cleaned
+                {processingCount > 0 ? ` · ${processingCount} cleaning…` : ' · Ready to save'}
               </span>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -785,7 +787,7 @@ export default function App() {
                 onClick={handleClearAll}
               >
                 <RefreshCw size={14} />
-                <span>Clear</span>
+                <span>Start Over</span>
               </button>
               {doneCount > 1 && (
                 <button 
@@ -794,7 +796,7 @@ export default function App() {
                   onClick={handleDownloadAll}
                 >
                   <Download size={15} />
-                  <span>Download All ({doneCount})</span>
+                  <span>Download All as ZIP ({doneCount})</span>
                 </button>
               )}
             </div>
@@ -825,7 +827,7 @@ export default function App() {
                       {it.status === 'processing' && (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25">
                           <RefreshCw size={11} className="animate-spin" />
-                          Processing
+                          Cleaning…
                         </span>
                       )}
                       {it.status === 'done' && (
@@ -833,15 +835,15 @@ export default function App() {
                           {aiCount > 0 ? (
                             <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                               <Sparkles size={11} />
-                              AI Found ({aiCount})
+                              AI Traces Found ({aiCount})
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#141a38] text-slate-500">
-                              No AI
+                              No AI Found
                             </span>
                           )}
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#141a38] text-slate-500">
-                            {it.out.removed.length} removed
+                            {it.out.removed.length} tags cleaned
                           </span>
                           {it.out.verified && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25">
@@ -868,7 +870,7 @@ export default function App() {
                           onClick={() => setItems(prev => prev.map(x => x.id === it.id ? { ...x, open: !x.open } : x))}
                         >
                           {it.open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                          <span className="hidden sm:inline">{it.open ? 'Hide' : 'Inspect'}</span>
+                          <span className="hidden sm:inline">{it.open ? 'Hide' : 'Details'}</span>
                         </button>
                         <button 
                           className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-full bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] text-slate-800 dark:text-slate-200 hover:border-sky-500/50 hover:text-sky-500 transition-all cursor-pointer"
@@ -901,7 +903,7 @@ export default function App() {
                 {it.open && it.out && (
                   <div className="mt-3 pt-3 border-t border-slate-200 dark:border-[#1e264a] grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                     <div>
-                      <h4 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">Detected</h4>
+                      <h4 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">Detected AI Traces</h4>
                       <ul className="flex flex-col gap-1 text-slate-600 dark:text-slate-400">
                         {it.out.ai && it.out.ai.length > 0 ? (
                           it.out.ai.map((d, i) => (
@@ -924,7 +926,7 @@ export default function App() {
                       </ul>
                     </div>
                     <div>
-                      <h4 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">Removed</h4>
+                      <h4 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">Removed Data</h4>
                       <ul className="flex flex-col gap-1 text-slate-600 dark:text-slate-400">
                         {it.out.removed.map((r, i) => (
                           <li key={i}>
@@ -935,7 +937,7 @@ export default function App() {
                       </ul>
                     </div>
                     <div>
-                      <h4 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">Kept</h4>
+                      <h4 className="text-[11px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500 mb-1.5">Preserved Info</h4>
                       <ul className="flex flex-col gap-1 text-slate-600 dark:text-slate-400">
                         {it.out.kept.map((k, i) => (
                           <li key={i}>✓ {k}</li>
@@ -950,25 +952,29 @@ export default function App() {
         </div>
 
         {/* FAQ */}
-        <section className="mt-14 max-w-2xl mx-auto w-full">
+        <section className="mt-14 max-w-3xl mx-auto w-full">
           <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 text-center mb-4">Frequently Asked Questions</h3>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             {[
               {
-                q: "Does this tool upload my images anywhere?",
-                a: "No. Everything runs 100% inside your browser using client-side binary parsing. Your images never touch any server, and the tool works completely offline as a PWA."
+                q: "Does this tool upload my photos to any server?",
+                a: "Never. Everything runs 100% inside your own browser. Your photos never leave your device, and nobody else can see them."
               },
               {
-                q: "Does removing metadata reduce image quality?",
-                a: "No. For JPG, PNG, and WebP, the cleaning is completely lossless. Pixel data is untouched — only metadata chunks (EXIF, XMP, C2PA) are stripped."
+                q: "Does removing metadata reduce photo quality?",
+                a: "Not at all. Your photos stay 100% crisp with zero quality loss. The tool only deletes invisible background tags (such as camera settings, GPS location, and AI prompts) without modifying your photo pixels."
               },
               {
-                q: "Can it remove pixel watermarks like SynthID?",
-                a: "No. SynthID embeds watermarks directly into pixel values. No metadata remover can remove that without degrading the image."
+                q: "Can it remove visible watermarks or Google SynthID?",
+                a: "No. This tool cleans hidden file metadata. It cannot remove stamps, logos, or pixel-level watermarks that are embedded directly inside the image pixels (like SynthID)."
               },
               {
-                q: "What does 'Make each image unique' do?",
-                a: "It injects imperceptible noise into ~25% of pixels (±1 color channel), completely altering the file hash while remaining invisible to the eye."
+                q: "What does 'Make each file unique' do?",
+                a: "It adds tiny, invisible tweaks so platforms and websites treat the photo as a brand-new file, while looking completely identical to human eyes."
+              },
+              {
+                q: "Can I use this app without internet (offline)?",
+                a: "Yes! Click the 'Install' button at the top to save it to your phone or computer. Once installed, it works fully offline anytime, anywhere."
               }
             ].map((item, idx) => (
               <div key={idx} className="bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-2xl overflow-hidden shadow-sm hover:border-sky-500/30 transition-colors">
@@ -1116,9 +1122,9 @@ export default function App() {
                   <CheckCircle2 size={30} />
                 </div>
                 <h4 className="font-bold text-base text-slate-900 dark:text-slate-100 mb-1">Already Installed!</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Open from your App Drawer or Application Launcher.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">You can open this app anytime from your home screen or app launcher.</p>
                 <div className="bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-xl p-3 text-left text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  💡 <strong>Reinstall?</strong> Uninstall the existing app first, then reload this page.
+                  💡 <strong>Want to reinstall?</strong> Uninstall the app first, then reload this page.
                 </div>
               </div>
             ) : (
@@ -1126,22 +1132,22 @@ export default function App() {
                 <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-xl">
                   <Monitor size={20} className="text-sky-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 mb-0.5">Desktop (Chrome / Brave / Edge)</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">Click the <strong>Install icon (⊕ / 📥)</strong> in the address bar, or browser menu → <em>Install AI Metadata Remover</em>.</p>
+                    <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 mb-0.5">Desktop (Chrome / Edge / Brave)</h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">Click the <strong>Install icon (⊕ / 📥)</strong> in your browser address bar or menu.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-xl">
                   <Smartphone size={20} className="text-sky-500 shrink-0 mt-0.5" />
                   <div>
                     <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 mb-0.5">iPhone &amp; iPad (Safari)</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">Tap <strong>Share</strong> → scroll down → <strong>Add to Home Screen (+)</strong>.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">Tap the <strong>Share</strong> button, scroll down, and tap <strong>Add to Home Screen (+)</strong>.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-xl">
                   <Smartphone size={20} className="text-sky-500 shrink-0 mt-0.5" />
                   <div>
                     <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100 mb-0.5">Android (Chrome / Brave)</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">Tap <strong>⋮ menu</strong> → <strong>Install app</strong>.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">Tap the <strong>three dots (⋮)</strong> at the top right, then tap <strong>Install app</strong>.</p>
                   </div>
                 </div>
               </div>

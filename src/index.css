@@ -9,15 +9,15 @@
 }
 
 /* Base Body Styles */
-body {
+html, body {
   font-family: var(--font-sans);
-  background-color: #f8fafc;
+  background-color: #eef2f6; /* Soothing, eye-friendly off-white tint — eliminates glare */
   color: #0f172a;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
-[data-theme="dark"] body {
+[data-theme="dark"], [data-theme="dark"] body {
   background-color: #090d1f;
   color: #f1f5f9;
 }
