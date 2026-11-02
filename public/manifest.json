@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "AI Metadata Remover - Dev Wonder",
   "short_name": "AI Remover",
   "description": "Free, private client-side AI metadata and EXIF remover by Dev Wonder.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0c0e14",
   "theme_color": "#06b6d4",
@@ -19,11 +21,28 @@
       "type": "image/png"
     },
     {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
-

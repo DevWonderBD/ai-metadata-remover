@@ -14,7 +14,12 @@ import {
   Star,
   Plus,
   Sparkles,
-  Info
+  Info,
+  Sun,
+  Moon,
+  X,
+  Monitor,
+  Smartphone
 } from 'lucide-react';
 
 import { cleanBytes } from './core/stripper.js';
@@ -22,6 +27,7 @@ import { detectFileNameAI } from './core/detectAI.js';
 import { makeZip } from './core/zip.js';
 import { fetchCurrentStats, recordVisit, recordCleanedImages, syncOfflineQueue } from './services/statsService.js';
 import devWonderEmblem from './assets/dev-wonder-logo-clean.png';
+import appIcon from './assets/ai-remover-icon-1024.png';
 import './App.css';
 
 const SUPPORTED_EXT_RE = /\.(jpe?g|png|webp|gif|avif|heic|heif|bmp|tiff?)$/i;
@@ -43,6 +49,38 @@ export default function App() {
   const [copiedId, setCopiedId] = useState(null);
   const [toasts, setToasts] = useState([]);
 
+  // Theme state: track device OS preference, toggleable, persisted in localStorage
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('dw_theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('dw_theme', theme);
+  }, [theme]);
+
+  // Sync with device OS theme changes if user hasn't explicitly locked a preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+    const handleOSThemeChange = (e) => {
+      const manual = localStorage.getItem('dw_theme_manual');
+      if (!manual) {
+        setTheme(e.matches ? 'light' : 'dark');
+      }
+    };
+    mediaQuery.addEventListener?.('change', handleOSThemeChange);
+    return () => mediaQuery.removeEventListener?.('change', handleOSThemeChange);
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('dw_theme_manual', 'true');
+    showToast(`Switched to ${nextTheme === 'light' ? 'Light' : 'Dark'} mode`, 'info');
+  };
+
   // Live Stats state
   const [stats, setStats] = useState({
     images_cleaned: 0,
@@ -51,7 +89,8 @@ export default function App() {
   });
 
   // PWA install prompt & standalone state
-  const [installPrompt, setInstallPrompt] = useState(null);
+  const [installPrompt, setInstallPrompt] = useState(window.__pwaInstallPrompt || null);
+  const [showInstallModal, setShowInstallModal] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   // FAQ accordion state
@@ -88,20 +127,36 @@ export default function App() {
     recordVisit();
     syncOfflineQueue();
 
+    // Check if prompt was captured early by index.html
+    if (window.__pwaInstallPrompt) {
+      setInstallPrompt(window.__pwaInstallPrompt);
+    }
+
+    const handlePromptReady = () => {
+      if (window.__pwaInstallPrompt) {
+        setInstallPrompt(window.__pwaInstallPrompt);
+      }
+    };
+    window.addEventListener('pwa-prompt-ready', handlePromptReady);
+
     const handleBeforeInstall = (e) => {
       e.preventDefault();
+      window.__pwaInstallPrompt = e;
       setInstallPrompt(e);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
     window.addEventListener('appinstalled', () => {
-      setIsStandalone(true);
+      window.__pwaInstallPrompt = null;
       setInstallPrompt(null);
-      showToast('App installed to your device successfully!', 'success');
+      setIsStandalone(true);
+      setShowInstallModal(false);
+      showToast('✓ App installed to your device successfully!', 'success');
     });
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('pwa-prompt-ready', handlePromptReady);
       if (mql.removeEventListener) {
         mql.removeEventListener('change', checkStandalone);
       }
@@ -113,11 +168,13 @@ export default function App() {
       installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
       if (outcome === 'accepted') {
+        window.__pwaInstallPrompt = null;
         setInstallPrompt(null);
         setIsStandalone(true);
+        showToast('✓ App installed to your device successfully!', 'success');
       }
     } else {
-      alert("Install Dev Wonder AI Metadata Remover:\n\n• On Desktop (Chrome/Brave/Edge): Click the Install icon in your browser URL bar.\n• On iPhone/iPad (Safari): Tap the Share button at bottom and choose 'Add to Home Screen'.\n• On Android (Chrome): Tap the 3-dots menu and tap 'Install app'.");
+      setShowInstallModal(true);
     }
   };
 
@@ -360,6 +417,17 @@ export default function App() {
           </div>
         </a>
         <div className="nav-actions">
+          {/* Light / Dark Mode Toggle */}
+          <button 
+            type="button" 
+            onClick={toggleTheme} 
+            className="theme-toggle-btn"
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+            aria-label="Toggle color theme"
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
           {isStandalone ? (
             <button 
               type="button" 
@@ -764,6 +832,67 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Sleek Install Guide Modal (replaces browser alert with visual guidance) */}
+      {showInstallModal && (
+        <div className="modal-overlay" onClick={() => setShowInstallModal(false)}>
+          <div className="install-modal" onClick={e => e.stopPropagation()}>
+            <div className="install-modal-header">
+              <div className="install-modal-title">
+                <img src={appIcon} alt="App Icon" className="install-modal-logo" />
+                <div>
+                  <h3>Install AI Metadata Remover</h3>
+                  <p>100% Client-Side &amp; Works Fully Offline</p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="install-modal-close"
+                onClick={() => setShowInstallModal(false)}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="install-modal-body">
+              <div className="install-step-card">
+                <Monitor size={22} className="install-step-icon" />
+                <div className="install-step-info">
+                  <h4>Desktop (Chrome / Brave / Edge)</h4>
+                  <p>Look at your browser's address/URL bar on the right side and click the <strong>Install / Open App icon (⊕ / 📥)</strong>, or click the browser's 3-dots menu ➔ <em>Install Dev Wonder AI Metadata Remover</em>.</p>
+                </div>
+              </div>
+
+              <div className="install-step-card">
+                <Smartphone size={22} className="install-step-icon" />
+                <div className="install-step-info">
+                  <h4>iPhone &amp; iPad (Safari)</h4>
+                  <p>Tap the <strong>Share</strong> button (box with upward arrow at bottom) ➔ scroll down and tap <strong>Add to Home Screen (+)</strong>.</p>
+                </div>
+              </div>
+
+              <div className="install-step-card">
+                <Smartphone size={22} className="install-step-icon" />
+                <div className="install-step-info">
+                  <h4>Android (Chrome / Brave)</h4>
+                  <p>Tap the <strong>3-dots menu (⋮)</strong> at top right ➔ tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="install-modal-footer">
+              <button 
+                type="button" 
+                className="install-modal-gotit-btn"
+                onClick={() => setShowInstallModal(false)}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
