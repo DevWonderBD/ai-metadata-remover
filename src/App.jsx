@@ -994,9 +994,9 @@ export default function App() {
       {/* Footer (2-Column + Bottom Bar Layout) */}
       <footer className="mt-16 pt-8 border-t border-slate-200 dark:border-[#1e264a] flex flex-col gap-6 w-full">
         <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-6 w-full text-center sm:text-left">
-          {/* Left Side: Open source initiative by Dev Wonder */}
-          <div className="flex flex-col items-center sm:items-start gap-2">
-            <span className="text-xs uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
+          {/* Dev Wonder Info (Desktop: Left / Order 1, Mobile: Bottom / Order 2) */}
+          <div className="order-2 sm:order-1 flex flex-col items-center sm:items-start gap-1.5">
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500">
               An open source initiative by
             </span>
 
@@ -1004,23 +1004,27 @@ export default function App() {
               href="https://www.devwonderbd.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 text-slate-900 dark:text-slate-100 hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2.5 text-slate-900 dark:text-slate-100 hover:opacity-85 transition-opacity"
               title="Dev Wonder - Simplifying Tech"
             >
               <img
                 src={devWonderEmblem}
                 alt="Dev Wonder"
-                className="h-9 w-auto object-contain"
+                className="h-6 w-auto object-contain"
               />
               <div className="flex flex-col text-left">
-                <span className="font-bold text-sm text-slate-900 dark:text-slate-100 leading-tight">Dev Wonder</span>
-                <span className="text-xs font-semibold text-sky-500 tracking-wide mt-0.5">Simplifying Tech</span>
+                <span className="font-['Syne'] font-extrabold text-sm uppercase tracking-wide text-black dark:text-white leading-none">
+                  Dev Wonder
+                </span>
+                <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-slate-500 dark:text-slate-400 mt-1 leading-none">
+                  Simplifying Tech
+                </span>
               </div>
             </a>
           </div>
 
-          {/* Right Side: GitHub Star button and repository links */}
-          <div className="flex flex-col items-center sm:items-end gap-3">
+          {/* GitHub Star button and repository links (Desktop: Right / Order 2, Mobile: Top / Order 1) */}
+          <div className="order-1 sm:order-2 flex flex-col items-center sm:items-end gap-3">
             <a
               href="https://github.com/DevWonderBD/ai-metadata-remover"
               target="_blank"
