@@ -942,7 +942,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Sleek Install Guide Modal (replaces browser alert with visual guidance) */}
+      {/* Sleek Install Guide / Status Modal */}
       {showInstallModal && (
         <div className="modal-overlay" onClick={() => setShowInstallModal(false)}>
           <div className="install-modal" onClick={e => e.stopPropagation()}>
@@ -950,8 +950,8 @@ export default function App() {
               <div className="install-modal-title">
                 <img src={appIcon} alt="App Icon" className="install-modal-logo" />
                 <div>
-                  <h3>Install AI Metadata Remover</h3>
-                  <p>100% Client-Side &amp; Works Fully Offline</p>
+                  <h3>AI Metadata Remover</h3>
+                  <p>Dev Wonder Open Source</p>
                 </div>
               </div>
               <button 
@@ -964,31 +964,50 @@ export default function App() {
               </button>
             </div>
 
-            <div className="install-modal-body">
-              <div className="install-step-card">
-                <Monitor size={22} className="install-step-icon" />
-                <div className="install-step-info">
-                  <h4>Desktop (Chrome / Brave / Edge)</h4>
-                  <p>Look at your browser's address/URL bar on the right side and click the <strong>Install / Open App icon (⊕ / 📥)</strong>, or click the browser's 3-dots menu ➔ <em>Install Dev Wonder AI Metadata Remover</em>.</p>
+            {isInstalled || isStandalone ? (
+              <div className="install-modal-body" style={{ textAlign: 'center', padding: '24px 20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--accent-soft)', border: '1px solid var(--accent-border)', display: 'grid', placeItems: 'center' }}>
+                    <CheckCircle2 size={30} color="var(--accent)" />
+                  </div>
+                </div>
+                <h4 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: 8 }}>
+                  App Already Installed on this Device!
+                </h4>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: 380, margin: '0 auto 16px' }}>
+                  The app is already installed. You can open it directly from your phone's <strong>App Drawer</strong> or your computer's <strong>Application Launcher</strong>.
+                </p>
+                <div style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-subtle)', lineHeight: 1.5, textAlign: 'left' }}>
+                  💡 <strong>Want to reinstall fresh?</strong> Simply uninstall the older app from your phone's app drawer or browser, then reload this page to get the fresh install prompt.
                 </div>
               </div>
+            ) : (
+              <div className="install-modal-body">
+                <div className="install-step-card">
+                  <Monitor size={22} className="install-step-icon" />
+                  <div className="install-step-info">
+                    <h4>Desktop (Chrome / Brave / Edge)</h4>
+                    <p>Click the <strong>Install / Open App icon (⊕ / 📥)</strong> in your browser's address bar, or click browser menu ⋮ ➔ <em>Install AI Metadata Remover</em>.</p>
+                  </div>
+                </div>
 
-              <div className="install-step-card">
-                <Smartphone size={22} className="install-step-icon" />
-                <div className="install-step-info">
-                  <h4>iPhone &amp; iPad (Safari)</h4>
-                  <p>Tap the <strong>Share</strong> button (box with upward arrow at bottom) ➔ scroll down and tap <strong>Add to Home Screen (+)</strong>.</p>
+                <div className="install-step-card">
+                  <Smartphone size={22} className="install-step-icon" />
+                  <div className="install-step-info">
+                    <h4>iPhone &amp; iPad (Safari)</h4>
+                    <p>Tap the <strong>Share</strong> button at bottom ➔ scroll down and tap <strong>Add to Home Screen (+)</strong>.</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="install-step-card">
-                <Smartphone size={22} className="install-step-icon" />
-                <div className="install-step-info">
-                  <h4>Android (Chrome / Brave)</h4>
-                  <p>Tap the <strong>3-dots menu (⋮)</strong> at top right ➔ tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+                <div className="install-step-card">
+                  <Smartphone size={22} className="install-step-icon" />
+                  <div className="install-step-info">
+                    <h4>Android (Chrome / Brave)</h4>
+                    <p>Tap the <strong>3-dots menu (⋮)</strong> at top right ➔ tap <strong>Install app</strong>.</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="install-modal-footer">
               <button 
