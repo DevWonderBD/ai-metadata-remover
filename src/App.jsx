@@ -181,11 +181,16 @@ export default function App() {
       window.__pwaInstallPrompt = null;
       setInstallPrompt(null);
       setIsInstalled(true);
-      setIsInstalling(false);
+      if (window.__installCleanup) {
+        window.__installCleanup();
+      }
       setInstallProgress(100);
-      localStorage.setItem('dw_pwa_installed', 'true');
-      setShowInstallModal(false);
-      showToast('✓ App installed successfully!', 'success');
+      setTimeout(() => {
+        setIsInstalling(false);
+        localStorage.setItem('dw_pwa_installed', 'true');
+        setShowInstallModal(false);
+        showToast('✓ App installed successfully!', 'success');
+      }, 500);
     });
 
     return () => {
@@ -252,28 +257,29 @@ export default function App() {
 
   const handleInstallClick = async () => {
     if (installPrompt) {
-      // Native install prompt available - trigger it
-      setIsInstalling(true);
-      setInstallProgress(0);
-      
-      // Animate progress bar while waiting for install
-      const progressInterval = setInterval(() => {
-        setInstallProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90; // Hold at 90% until appinstalled event
-          }
-          return prev + Math.random() * 15;
-        });
-      }, 300);
-
       try {
+        // 1. Show browser's native install dialog first WITHOUT showing progress overlay yet
         installPrompt.prompt();
         const { outcome } = await installPrompt.userChoice;
+
+        // 2. ONLY show progress overlay if user actually clicks "Install" in the browser dialog!
         if (outcome === 'accepted') {
-          // User accepted, wait for appinstalled event to set 100%
-          // If no appinstalled event fires within 8s, complete anyway
-          setTimeout(() => {
+          setIsInstalling(true);
+          setInstallProgress(15);
+
+          const startTime = Date.now();
+          const targetDuration = 2600; // ~2.6s smooth progress while browser mints WebAPK
+          
+          const progressInterval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const pct = Math.min(92, Math.round(15 + (elapsed / targetDuration) * 77));
+            setInstallProgress(pct);
+            if (pct >= 92) {
+              clearInterval(progressInterval);
+            }
+          }, 100);
+
+          const completeTimeout = setTimeout(() => {
             clearInterval(progressInterval);
             setInstallProgress(100);
             setTimeout(() => {
@@ -282,15 +288,21 @@ export default function App() {
               setInstallPrompt(null);
               setIsInstalled(true);
               localStorage.setItem('dw_pwa_installed', 'true');
+              showToast('✓ App installed to your device successfully!', 'success');
             }, 600);
-          }, 8000);
+          }, 3000);
+
+          window.__installCleanup = () => {
+            clearInterval(progressInterval);
+            clearTimeout(completeTimeout);
+          };
         } else {
-          clearInterval(progressInterval);
+          // User clicked "Cancel" on browser dialog - do not show progress
           setIsInstalling(false);
           setInstallProgress(0);
         }
-      } catch {
-        clearInterval(progressInterval);
+      } catch (err) {
+        console.error('Install error:', err);
         setIsInstalling(false);
         setInstallProgress(0);
       }
