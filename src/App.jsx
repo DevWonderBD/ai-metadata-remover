@@ -117,9 +117,18 @@ function LottieVisitorIcon({ size = 14, className = "text-indigo-500" }) {
 
 export default function App() {
   const [items, setItems] = useState([]);
-  const [keepICC, setKeepICC] = useState(true);
-  const [unique, setUnique] = useState(false);
-  const [nameMode, setNameMode] = useState('suffix');
+  const [keepICC, setKeepICC] = useState(() => {
+    const saved = localStorage.getItem('dw_opt_keep_icc');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [unique, setUnique] = useState(() => {
+    const saved = localStorage.getItem('dw_opt_unique');
+    return saved !== null ? saved === 'true' : false;
+  });
+  const [nameMode, setNameMode] = useState(() => {
+    const saved = localStorage.getItem('dw_opt_name_mode');
+    return (saved === 'suffix' || saved === 'keep' || saved === 'rename') ? saved : 'suffix';
+  });
   const [isDragOver, setIsDragOver] = useState(false);
   const [recentUpload, setRecentUpload] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
@@ -501,12 +510,19 @@ export default function App() {
 
   const handleKeepICCChange = (checked) => {
     setKeepICC(checked);
+    localStorage.setItem('dw_opt_keep_icc', String(checked));
     items.forEach(it => { processSingleItem(it, { keepICC: checked, unique }); });
   };
 
   const handleUniqueChange = (checked) => {
     setUnique(checked);
+    localStorage.setItem('dw_opt_unique', String(checked));
     items.forEach(it => { processSingleItem(it, { keepICC, unique: checked }); });
+  };
+
+  const handleNameModeChange = (mode) => {
+    setNameMode(mode);
+    localStorage.setItem('dw_opt_name_mode', mode);
   };
 
   const generateOutputName = (item, index) => {
@@ -830,7 +846,7 @@ export default function App() {
             <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">Save files as</label>
             <select 
               value={nameMode} 
-              onChange={(e) => setNameMode(e.target.value)}
+              onChange={(e) => handleNameModeChange(e.target.value)}
               className="bg-slate-50 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-sky-500 cursor-pointer"
             >
               <option value="suffix">photo-clean.jpg (Cleaned suffix)</option>
@@ -1152,7 +1168,7 @@ export default function App() {
           </p>
           <div className="flex items-center">
             <span className="font-mono px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#141a38] border border-slate-200 dark:border-[#1e264a] text-slate-600 dark:text-slate-400">
-              v{currentVersion}
+              version: {currentVersion}
             </span>
           </div>
         </div>
