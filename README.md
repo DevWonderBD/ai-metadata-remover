@@ -8,9 +8,10 @@
 [![React](https://img.shields.io/badge/React-19-61dafb.svg?logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8.x-646cff.svg?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![PWA Ready](https://img.shields.io/badge/PWA-Offline%20Ready-success.svg)](https://web.dev/progressive-web-apps/)
-[![Zero Uploads](https://img.shields.io/badge/Privacy-100%25%20Client--Side-green.svg)](#privacy-guarantee)
+[![Zero Uploads](https://img.shields.io/badge/Privacy-100%25%20Client--Side-green.svg)](#-features)
+[![Live Demo](https://img.shields.io/badge/Live_App-aimeta.devwonderbd.com-0284c7.svg?logo=google-chrome&logoColor=white)](https://aimeta.devwonderbd.com)
 
-[Live Demo](https://github.com/DevWonderBD/ai-metadata-remover) · [Report Bug](https://github.com/DevWonderBD/ai-metadata-remover/issues) · [Request Feature](https://github.com/DevWonderBD/ai-metadata-remover/issues)
+[🚀 Live App (aimeta.devwonderbd.com)](https://aimeta.devwonderbd.com) · [Report Bug](https://github.com/DevWonderBD/ai-metadata-remover/issues) · [Request Feature](https://github.com/DevWonderBD/ai-metadata-remover/issues)
 
 </div>
 
@@ -92,11 +93,14 @@ The optimized, production-ready static assets are output to the `dist/` director
 
 ## 🌐 Production Deployment
 
-Because the React app compiles into static HTML, CSS, and JS, it can be hosted on any web server, CDN, or static hosting provider (Vercel, Netlify, Cloudflare Pages, GitHub Pages, or traditional web hosting).
+- **Official Live URL:** [https://aimeta.devwonderbd.com](https://aimeta.devwonderbd.com)
+- **Initiative by:** [Dev Wonder](https://www.devwonderbd.com)
+
+Because the React app compiles into static HTML, CSS, and JS, it can be hosted on any web server, CDN, or static hosting provider (cPanel, Vercel, Netlify, Cloudflare Pages, GitHub Pages):
 
 1. Run `npm run build` locally.
-2. Upload the contents of `dist/` to your web server root (e.g. `public_html/`).
-3. If using the optional stats counter, import `api/schema.sql` into MySQL and configure `api/config.php`.
+2. Upload the contents of `dist/` (or extract `dist/dist.zip`) to your server directory for `aimeta.devwonderbd.com` (e.g. `public_html/aimeta/` or subdomain root).
+3. If using the live stats counter, import `api/schema.sql` into MySQL and configure `api/config.php`.
 
 ---
 
