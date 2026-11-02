@@ -3,26 +3,32 @@
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Theme: Refined Modern Dark */
-  --bg-page: #0a0c10;
-  --bg-card: #12151c;
-  --bg-card-hover: #181d26;
-  --bg-card-subtle: #1a202c;
-  --border: #232936;
-  --border-focus: #06b6d4;
+  /* Material Design 3 (M3) Tonal Elevation & Cosmic Palette (Extracted from App Logo) */
+  --bg-page: #090d1f;          /* Surface / Canvas (Deep Cosmic Obsidian) */
+  --bg-card: #11162e;          /* Surface Container Low */
+  --bg-card-hover: #161c3b;    /* Surface Container */
+  --bg-card-subtle: #141a38;   /* Surface Container Lowest */
+  --border: #1e264a;          /* Outline Variant */
+  --border-focus: #38bdf8;    /* Outline Focus / Celestial Cyan */
   
-  --text-main: #f1f5f9;
-  --text-muted: #94a3b8;
+  --text-main: #f1f5f9;       /* On Surface */
+  --text-muted: #94a3b8;      /* On Surface Variant */
   --text-subtle: #64748b;
 
-  /* Dev Wonder Primary Cyan Palette */
-  --accent: #06b6d4;
-  --accent-hover: #0891b2;
-  --accent-soft: rgba(6, 182, 212, 0.12);
-  --accent-border: rgba(6, 182, 212, 0.35);
+  /* Logo Palette: Glowing Celestial Star (Cyan) & Orbital Arc (Indigo) */
+  --accent: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --accent-soft: rgba(56, 189, 248, 0.12);
+  --accent-border: rgba(56, 189, 248, 0.28);
 
-  --brand-cyan: #06b6d4;
-  --brand-green: #10b981;
+  --secondary: #818cf8;
+  --secondary-hover: #6366f1;
+  --secondary-soft: rgba(129, 140, 248, 0.12);
+  --secondary-border: rgba(129, 140, 248, 0.28);
+
+  /* Primary action gradient matching the celestial star */
+  --primary-gradient: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+  --primary-gradient-hover: linear-gradient(135deg, #0ea5e9 0%, #4f46e5 100%);
 
   --success: #10b981;
   --success-soft: rgba(16, 185, 129, 0.12);
@@ -31,35 +37,48 @@
   --danger: #ef4444;
   --danger-soft: rgba(239, 68, 68, 0.12);
 
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  /* M3 Shape System */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
   --radius-full: 9999px;
   
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  /* M3 Subtle Tactile Elevation */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-/* Light Mode: applied via data-theme="light" or device preference */
+/* Light Mode: Material You Clean Tonal System */
 [data-theme="light"] {
-  --bg-page: #f8fafc;
+  --bg-page: #f6f8fd;
   --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
-  --bg-card-subtle: #f8fafc;
-  --border: #e2e8f0;
-  --border-focus: #0891b2;
+  --bg-card-hover: #f0f4fc;
+  --bg-card-subtle: #f1f5fa;
+  --border: #d8e2f0;
+  --border-focus: #0284c7;
 
-  --text-main: #0f172a;
+  --text-main: #0c1222;
   --text-muted: #475569;
   --text-subtle: #64748b;
 
-  --accent: #0891b2;
-  --accent-hover: #0e7490;
-  --accent-soft: rgba(8, 145, 178, 0.1);
-  --accent-border: rgba(8, 145, 178, 0.3);
+  --accent: #0284c7;
+  --accent-hover: #0369a1;
+  --accent-soft: rgba(2, 132, 199, 0.08);
+  --accent-border: rgba(2, 132, 199, 0.25);
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --secondary: #4f46e5;
+  --secondary-hover: #4338ca;
+  --secondary-soft: rgba(79, 70, 229, 0.08);
+  --secondary-border: rgba(79, 70, 229, 0.22);
+
+  --primary-gradient: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+  --primary-gradient-hover: linear-gradient(135deg, #0369a1 0%, #4338ca 100%);
+
+  --shadow-sm: 0 1px 3px rgba(12, 18, 34, 0.05), 0 1px 2px rgba(12, 18, 34, 0.04);
+  --shadow-md: 0 4px 16px rgba(12, 18, 34, 0.08), 0 2px 6px rgba(12, 18, 34, 0.05);
+  --shadow-lg: 0 12px 32px rgba(12, 18, 34, 0.12), 0 4px 12px rgba(12, 18, 34, 0.06);
 }
 
 * {

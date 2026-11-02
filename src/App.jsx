@@ -506,13 +506,13 @@ export default function App() {
 
       {/* Top Navbar */}
       <header className="navbar">
-        <a href="https://www.devwonderbd.com" target="_blank" rel="noopener noreferrer" className="brand">
+        <a href="/" className="brand" title="AI Metadata Remover by Dev Wonder">
           <div className="brand-emblem-wrap">
-            <img src={devWonderEmblem} alt="Dev Wonder" className="brand-logo" />
+            <img src={appIcon} alt="AI Metadata Remover Logo" className="brand-logo" />
           </div>
           <div className="brand-info">
-            <span className="brand-title">Dev Wonder</span>
-            <span className="brand-tagline">Simplifying Tech</span>
+            <span className="brand-title">AI Metadata Remover</span>
+            <span className="brand-tagline">by Dev Wonder</span>
           </div>
         </a>
         <div className="nav-actions">
@@ -910,13 +910,27 @@ export default function App() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer / Copyright Section */}
       <footer className="footer">
         <div className="footer-left">
-          An open source initiative by{' '}
-          <a href="https://www.devwonderbd.com" target="_blank" rel="noopener noreferrer" className="footer-brand-link">
-            Dev Wonder
+          <a 
+            href="https://www.devwonderbd.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="footer-brand"
+            title="Dev Wonder - Simplifying Tech"
+          >
+            <img src={devWonderEmblem} alt="Dev Wonder" className="footer-devwonder-logo" />
           </a>
+          <div className="footer-meta">
+            <p className="footer-copyright">
+              © {new Date().getFullYear()} Dev Wonder · Simplifying Tech
+            </p>
+            <div className="footer-badges">
+              <span className="footer-version-badge">v{currentVersion}</span>
+              <span className="footer-tag">100% Client-Side</span>
+            </div>
+          </div>
         </div>
         <div className="footer-right">
           <a 
