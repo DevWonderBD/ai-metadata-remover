@@ -14,12 +14,12 @@ import {
   Star,
   Plus,
   Sparkles,
-  Info,
   Sun,
   Moon,
   X,
   Monitor,
-  Smartphone
+  Smartphone,
+  ExternalLink,
 } from 'lucide-react';
 
 import { cleanBytes } from './core/stripper.js';
@@ -32,6 +32,14 @@ import './App.css';
 
 const SUPPORTED_EXT_RE = /\.(jpe?g|png|webp|gif|avif|heic|heif|bmp|tiff?)$/i;
 
+function GithubIcon({ size = 14, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} style={{ display: 'inline-block', verticalAlign: 'middle' }}>
+      <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+    </svg>
+  );
+}
+
 function formatBytes(bytes) {
   if (!bytes || bytes === 0) return '0 B';
   if (bytes < 1024) return bytes + ' B';
@@ -43,13 +51,13 @@ export default function App() {
   const [items, setItems] = useState([]);
   const [keepICC, setKeepICC] = useState(true);
   const [unique, setUnique] = useState(false);
-  const [nameMode, setNameMode] = useState('suffix'); // 'suffix' | 'keep' | 'rename'
+  const [nameMode, setNameMode] = useState('suffix');
   const [isDragOver, setIsDragOver] = useState(false);
   const [recentUpload, setRecentUpload] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [toasts, setToasts] = useState([]);
 
-  // Theme state: track device OS preference, toggleable, persisted in localStorage
+  // Theme state
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('dw_theme');
     if (saved === 'light' || saved === 'dark') return saved;
@@ -61,7 +69,6 @@ export default function App() {
     localStorage.setItem('dw_theme', theme);
   }, [theme]);
 
-  // Sync with device OS theme changes if user hasn't explicitly locked a preference
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
     const handleOSThemeChange = (e) => {
@@ -81,27 +88,29 @@ export default function App() {
     showToast(`Switched to ${nextTheme === 'light' ? 'Light' : 'Dark'} mode`, 'info');
   };
 
-  // App version tracking (from package.json define)
+  // App version tracking
   const currentVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0';
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [remoteVersion, setRemoteVersion] = useState(currentVersion);
 
-  // Live Stats state
+  // Live Stats
   const [stats, setStats] = useState({
     images_cleaned: 0,
     ai_detected_count: 0,
     total_visits: 0,
   });
 
-  // PWA install prompt & standalone state
+  // PWA install
   const [installPrompt, setInstallPrompt] = useState(window.__pwaInstallPrompt || null);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isInstalled, setIsInstalled] = useState(() => {
     return localStorage.getItem('dw_pwa_installed') === 'true';
   });
+  const [isInstalling, setIsInstalling] = useState(false);
+  const [installProgress, setInstallProgress] = useState(0);
 
-  // FAQ accordion state
+  // FAQ accordion
   const [faqOpen, setFaqOpen] = useState(null);
 
   const fileInputRef = useRef(null);
@@ -135,7 +144,6 @@ export default function App() {
       mql.addEventListener('change', checkStandalone);
     }
 
-    // Check if app is already installed on the OS via getInstalledRelatedApps
     if ('getInstalledRelatedApps' in navigator) {
       navigator.getInstalledRelatedApps().then(apps => {
         if (apps && apps.length > 0) {
@@ -149,7 +157,6 @@ export default function App() {
     recordVisit();
     syncOfflineQueue();
 
-    // Check if prompt was captured early by index.html
     if (window.__pwaInstallPrompt) {
       setInstallPrompt(window.__pwaInstallPrompt);
     }
@@ -165,7 +172,6 @@ export default function App() {
       e.preventDefault();
       window.__pwaInstallPrompt = e;
       setInstallPrompt(e);
-      // Browser triggered prompt => app is not installed yet
       setIsInstalled(false);
       localStorage.removeItem('dw_pwa_installed');
     };
@@ -175,9 +181,11 @@ export default function App() {
       window.__pwaInstallPrompt = null;
       setInstallPrompt(null);
       setIsInstalled(true);
+      setIsInstalling(false);
+      setInstallProgress(100);
       localStorage.setItem('dw_pwa_installed', 'true');
       setShowInstallModal(false);
-      showToast('✓ App installed to your device successfully!', 'success');
+      showToast('✓ App installed successfully!', 'success');
     });
 
     return () => {
@@ -189,23 +197,21 @@ export default function App() {
     };
   }, [showToast]);
 
-  // Check for remote/production updates (SW & version.json comparison)
+  // Check for remote updates
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistration().then(reg => {
         if (!reg) return;
-
         if (reg.waiting) {
           setUpdateAvailable(true);
         }
-
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 setUpdateAvailable(true);
-                showToast('⚡ A new update is available for AI Metadata Remover!', 'info');
+                showToast('A new update is available!', 'info');
               }
             });
           }
@@ -220,7 +226,6 @@ export default function App() {
           if (data && data.version && data.version !== currentVersion) {
             setUpdateAvailable(true);
             setRemoteVersion(data.version);
-            showToast(`⚡ Update available: v${data.version}! Click Update to apply.`, 'info');
           }
         })
         .catch(() => {});
@@ -232,7 +237,7 @@ export default function App() {
   }, [currentVersion, showToast]);
 
   const handleApplyUpdate = () => {
-    showToast('🔄 Updating to latest build...', 'info');
+    showToast('Updating to latest version…', 'info');
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistration().then(reg => {
         if (reg && reg.waiting) {
@@ -247,14 +252,47 @@ export default function App() {
 
   const handleInstallClick = async () => {
     if (installPrompt) {
-      installPrompt.prompt();
-      const { outcome } = await installPrompt.userChoice;
-      if (outcome === 'accepted') {
-        window.__pwaInstallPrompt = null;
-        setInstallPrompt(null);
-        setIsInstalled(true);
-        localStorage.setItem('dw_pwa_installed', 'true');
-        showToast('✓ App installed to your device successfully!', 'success');
+      // Native install prompt available - trigger it
+      setIsInstalling(true);
+      setInstallProgress(0);
+      
+      // Animate progress bar while waiting for install
+      const progressInterval = setInterval(() => {
+        setInstallProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90; // Hold at 90% until appinstalled event
+          }
+          return prev + Math.random() * 15;
+        });
+      }, 300);
+
+      try {
+        installPrompt.prompt();
+        const { outcome } = await installPrompt.userChoice;
+        if (outcome === 'accepted') {
+          // User accepted, wait for appinstalled event to set 100%
+          // If no appinstalled event fires within 8s, complete anyway
+          setTimeout(() => {
+            clearInterval(progressInterval);
+            setInstallProgress(100);
+            setTimeout(() => {
+              setIsInstalling(false);
+              window.__pwaInstallPrompt = null;
+              setInstallPrompt(null);
+              setIsInstalled(true);
+              localStorage.setItem('dw_pwa_installed', 'true');
+            }, 600);
+          }, 8000);
+        } else {
+          clearInterval(progressInterval);
+          setIsInstalling(false);
+          setInstallProgress(0);
+        }
+      } catch {
+        clearInterval(progressInterval);
+        setIsInstalling(false);
+        setInstallProgress(0);
       }
     } else if (isInstalled || isStandalone) {
       handleCheckUpdate();
@@ -276,17 +314,17 @@ export default function App() {
         if (data && data.version && data.version !== currentVersion) {
           setUpdateAvailable(true);
           setRemoteVersion(data.version);
-          showToast(`⚡ New version v${data.version} available! Click Update to apply.`, 'info');
+          showToast(`Update v${data.version} available!`, 'info');
         } else {
-          showToast(`✓ App is up to date (v${currentVersion}). You are on the latest version.`, 'success');
+          showToast(`App is up to date (v${currentVersion})`, 'success');
         }
       })
       .catch(() => {
-        showToast(`✓ App is up to date (v${currentVersion})`, 'success');
+        showToast(`App is up to date (v${currentVersion})`, 'success');
       });
   };
 
-  // Process a single item asynchronously without effect unmount cancellation
+  // Processing logic
   const processSingleItem = useCallback(async (item, options) => {
     setItems(prev => prev.map(x => x.id === item.id ? { ...x, status: 'processing' } : x));
 
@@ -297,17 +335,11 @@ export default function App() {
 
       setItems(prev => prev.map(x => {
         if (x.id === item.id) {
-          return {
-            ...x,
-            status: 'done',
-            out: cleaned,
-            url: blobUrl,
-          };
+          return { ...x, status: 'done', out: cleaned, url: blobUrl };
         }
         return x;
       }));
 
-      // Telemetry update
       const aiCount = (cleaned.ai ? cleaned.ai.length : 0) + (item.nameAI.length ? 1 : 0);
       recordCleanedImages(1, aiCount);
       setStats(prev => ({
@@ -316,9 +348,8 @@ export default function App() {
         ai_detected_count: prev.ai_detected_count + (aiCount > 0 ? 1 : 0),
       }));
 
-      showToast(`✓ Cleaned ${item.file.name}`, 'success');
+      showToast(`Cleaned ${item.file.name}`, 'success');
 
-      // Check if all are done, trigger celebration
       setTimeout(() => {
         const current = itemsRef.current;
         const allDone = current.length > 0 && current.every(x => x.status === 'done' || x.status === 'error');
@@ -327,7 +358,7 @@ export default function App() {
             particleCount: 50,
             spread: 65,
             origin: { y: 0.65 },
-            colors: ['#06b6d4', '#10b981', '#38bdf8', '#34d399']
+            colors: ['#38bdf8', '#818cf8', '#10b981', '#06b6d4']
           });
         }
       }, 200);
@@ -336,15 +367,11 @@ export default function App() {
       console.error('Processing error:', err);
       setItems(prev => prev.map(x => {
         if (x.id === item.id) {
-          return {
-            ...x,
-            status: 'error',
-            error: err.message || 'Processing failed',
-          };
+          return { ...x, status: 'error', error: err.message || 'Processing failed' };
         }
         return x;
       }));
-      showToast(`Error processing ${item.file.name}`, 'error');
+      showToast(`Error: ${item.file.name}`, 'error');
     }
   }, [showToast]);
 
@@ -370,30 +397,24 @@ export default function App() {
     setRecentUpload(true);
     setTimeout(() => setRecentUpload(false), 1400);
 
-    showToast(`📥 Received ${newItems.length} image${newItems.length > 1 ? 's' : ''}! Cleaning...`, 'info');
+    showToast(`Received ${newItems.length} image${newItems.length > 1 ? 's' : ''}`, 'info');
 
-    // Run processing on all new items immediately
     const currentOpts = { keepICC, unique };
     newItems.forEach(it => {
       processSingleItem(it, currentOpts);
     });
   }, [keepICC, unique, processSingleItem, showToast]);
 
-  // Window-level clipboard paste listener (Ctrl+V / Cmd+V)
+  // Clipboard paste
   useEffect(() => {
     const handlePaste = (e) => {
       const activeEl = document.activeElement;
-      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-        return;
-      }
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
       const dt = e.clipboardData;
       if (!dt) return;
       let files = [...dt.files];
       if (!files.length) {
-        files = [...dt.items]
-          .filter(i => i.kind === 'file')
-          .map(i => i.getAsFile())
-          .filter(Boolean);
+        files = [...dt.items].filter(i => i.kind === 'file').map(i => i.getAsFile()).filter(Boolean);
       }
       files = files.filter(f => f.type.startsWith('image/') || SUPPORTED_EXT_RE.test(f.name));
       if (files.length) {
@@ -401,31 +422,24 @@ export default function App() {
         addFiles(files);
       }
     };
-
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
   }, [addFiles]);
 
-  // Handle options change: re-clean existing items
   const handleKeepICCChange = (checked) => {
     setKeepICC(checked);
-    items.forEach(it => {
-      processSingleItem(it, { keepICC: checked, unique });
-    });
+    items.forEach(it => { processSingleItem(it, { keepICC: checked, unique }); });
   };
 
   const handleUniqueChange = (checked) => {
     setUnique(checked);
-    items.forEach(it => {
-      processSingleItem(it, { keepICC, unique: checked });
-    });
+    items.forEach(it => { processSingleItem(it, { keepICC, unique: checked }); });
   };
 
-  const generateOutputName = (item, index, doneList) => {
+  const generateOutputName = (item, index) => {
     if (!item.out) return item.file.name;
     const base = item.file.name.replace(/\.[^.]+$/, '');
     const ext = item.out.ext;
-
     if (nameMode === 'keep') return `${base}.${ext}`;
     if (nameMode === 'suffix') return `${base}-clean.${ext}`;
     return `image-${String(index + 1).padStart(3, '0')}.${ext}`;
@@ -448,35 +462,33 @@ export default function App() {
       }
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
       setCopiedId(item.id);
-      showToast('📋 Copied cleaned image to clipboard!', 'success');
+      showToast('Copied to clipboard', 'success');
       setTimeout(() => setCopiedId(null), 2000);
-    } catch (e) {
-      alert('Copy to clipboard failed in your browser. Please use the Download button.');
+    } catch {
+      alert('Copy failed. Please use the Download button.');
     }
   };
 
   const handleDownloadAll = () => {
     const doneItems = items.filter(it => it.status === 'done');
     if (!doneItems.length) return;
-
     const filesForZip = doneItems.map((it, idx) => ({
-      name: generateOutputName(it, idx, doneItems),
+      name: generateOutputName(it, idx),
       bytes: it.out.bytes,
     }));
-
     const zipBlob = makeZip(filesForZip);
     const link = document.createElement('a');
     link.href = URL.createObjectURL(zipBlob);
-    link.download = 'cleaned-images-devwonder.zip';
+    link.download = 'cleaned-images.zip';
     link.click();
-    showToast(`📦 Downloaded ${filesForZip.length} cleaned images in ZIP!`, 'success');
+    showToast(`Downloaded ${filesForZip.length} images as ZIP`, 'success');
     setTimeout(() => URL.revokeObjectURL(link.href), 5000);
   };
 
   const handleClearAll = () => {
     items.forEach(it => it.url && URL.revokeObjectURL(it.url));
     setItems([]);
-    showToast('Cleaned list reset', 'info');
+    showToast('All cleared', 'info');
   };
 
   const removeItem = (id) => {
@@ -491,544 +503,539 @@ export default function App() {
   const processingCount = items.filter(it => it.status === 'processing' || it.status === 'queued').length;
 
   return (
-    <div className="app-container">
-      {/* Toast Notifications Container */}
-      <div className="toast-container">
+    <div className="app-shell">
+      {/* ==================== Toast Notifications ==================== */}
+      <div className="toast-stack">
         {toasts.map(t => (
-          <div key={t.id} className={`toast ${t.type}`}>
-            {t.type === 'success' && <CheckCircle2 size={16} className="toast-icon success" />}
-            {t.type === 'info' && <FolderDown size={16} className="toast-icon info" />}
-            {t.type === 'error' && <AlertCircle size={16} className="toast-icon error" />}
+          <div key={t.id} className={`toast toast--${t.type}`}>
+            {t.type === 'success' && <CheckCircle2 size={16} />}
+            {t.type === 'info' && <FolderDown size={16} />}
+            {t.type === 'error' && <AlertCircle size={16} />}
             <span>{t.message}</span>
           </div>
         ))}
       </div>
 
-      {/* Top Navbar */}
-      <header className="navbar">
-        <a href="/" className="brand" title="AI Metadata Remover by Dev Wonder">
-          <div className="brand-emblem-wrap">
-            <img src={appIcon} alt="AI Metadata Remover Logo" className="brand-logo" />
+      {/* ==================== Install Progress Overlay ==================== */}
+      {isInstalling && (
+        <div className="install-progress-overlay">
+          <div className="install-progress-card">
+            <img src={appIcon} alt="" className="install-progress-icon" />
+            <div className="install-progress-info">
+              <h3>Installing AI Metadata Remover…</h3>
+              <p className="install-progress-sub">Registering app &amp; caching offline resources</p>
+            </div>
+            <div className="install-progress-bar-track">
+              <div 
+                className="install-progress-bar-fill" 
+                style={{ width: `${Math.min(installProgress, 100)}%` }}
+              />
+            </div>
+            <div className="install-progress-footer">
+              <span className="install-progress-label">
+                {installProgress >= 100 ? '✓ Ready in your App Drawer!' : 'Installing…'}
+              </span>
+              <span className="install-progress-percent">{Math.round(installProgress)}%</span>
+            </div>
           </div>
-          <div className="brand-info">
-            <span className="brand-title">AI Metadata Remover</span>
-            <span className="brand-tagline">by Dev Wonder</span>
+        </div>
+      )}
+
+      {/* ==================== Top Navigation ==================== */}
+      <header className="topbar">
+        <a href="/" className="topbar__brand" title="AI Metadata Remover">
+          <img src={appIcon} alt="" className="topbar__logo" />
+          <div className="topbar__text">
+            <span className="topbar__title">AI Metadata Remover</span>
+            <span className="topbar__subtitle">by Dev Wonder</span>
           </div>
         </a>
-        <div className="nav-actions">
-          {/* Light / Dark Mode Toggle */}
+
+        <nav className="topbar__actions">
+          {/* GitHub Star */}
+          <a 
+            href="https://github.com/DevWonderBD/ai-metadata-remover" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="topbar__github-btn"
+            title="Star on GitHub"
+          >
+            <Star size={14} />
+            <span>Star</span>
+          </a>
+
+          {/* Theme Toggle */}
           <button 
             type="button" 
             onClick={toggleTheme} 
-            className="theme-toggle-btn"
+            className="topbar__icon-btn"
             title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-            aria-label="Toggle color theme"
+            aria-label="Toggle theme"
           >
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
+          {/* Install / Update / Status */}
           {updateAvailable ? (
             <button 
               type="button" 
               onClick={handleApplyUpdate} 
-              className="app-status-chip update-available"
-              title={`New version v${remoteVersion} available. Click to update now!`}
+              className="topbar__chip topbar__chip--update"
+              title={`Update to v${remoteVersion}`}
             >
-              <span className="status-update-dot"></span>
-              <span>Update Available</span>
+              <span className="pulse-dot pulse-dot--amber" />
+              <span>Update</span>
             </button>
           ) : isStandalone || isInstalled ? (
             <button 
               type="button" 
               onClick={handleCheckUpdate} 
-              className="app-status-chip"
-              title={`App is up to date (v${currentVersion}). Click to check for updates.`}
+              className="topbar__chip"
+              title={`v${currentVersion} — Check for updates`}
             >
-              <span className="status-pulse-dot"></span>
-              <span>Up to date</span>
+              <span className="pulse-dot pulse-dot--green" />
+              <span>App Installed</span>
             </button>
           ) : (
             <button 
               type="button" 
               onClick={handleInstallClick} 
-              className="install-app-btn"
-              title="Install app to your device for 100% offline use"
+              className="topbar__install-btn"
+              title="Install for offline use"
             >
               <Download size={14} />
-              <span>Install App</span>
+              <span>Install</span>
             </button>
           )}
-        </div>
+        </nav>
       </header>
 
-      {/* Hero */}
-      <section className="hero">
-        <div className="hero-pill">
-          <ShieldCheck size={14} />
-          <span>100% Client-Side: Your images never leave your browser</span>
-        </div>
-        <h1>AI Metadata Remover</h1>
-        <p className="hero-sub">
-          Remove hidden AI generation tags, C2PA Content Credentials, Midjourney & ChatGPT prompts, and camera EXIF data losslessly in bulk.
-        </p>
+      {/* ==================== Main Content ==================== */}
+      <main className="main">
+        {/* Hero Section */}
+        <section className="hero">
+          <div className="hero__badge">
+            <ShieldCheck size={14} />
+            <span>100% Client-Side · Your images never leave your browser</span>
+          </div>
+          <h1 className="hero__title">AI Metadata Remover</h1>
+          <p className="hero__desc">
+            Remove hidden AI generation tags, C2PA Content Credentials, Midjourney &amp; ChatGPT prompts, and camera EXIF data — losslessly, in bulk.
+          </p>
 
-        {/* Minimal 3-Item Clean Stats Bar */}
-        <div className="stats-bar">
-          <div className="stat-item">
-            <span className="stat-dot cyan"></span>
-            <span><strong>{stats.images_cleaned.toLocaleString()}</strong> images cleaned</span>
+          {/* Stats Chips */}
+          <div className="stats-row">
+            <div className="stat-chip">
+              <span className="stat-dot stat-dot--cyan" />
+              <span><strong>{stats.images_cleaned.toLocaleString()}</strong> cleaned</span>
+            </div>
+            <div className="stat-chip">
+              <span className="stat-dot stat-dot--green" />
+              <span><strong>{stats.ai_detected_count.toLocaleString()}</strong> AI traces</span>
+            </div>
+            <div className="stat-chip">
+              <span className="stat-dot" />
+              <span><strong>0 MB</strong> uploaded</span>
+            </div>
           </div>
-          <div className="stat-item">
-            <span className="stat-dot green"></span>
-            <span><strong>{stats.ai_detected_count.toLocaleString()}</strong> AI traces stripped</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-dot"></span>
-            <span><strong>0 MB</strong> uploaded (100% Private)</span>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Dynamic Dropzone: Collapses into sleek compact mode when items exist */}
-      <div 
-        className={`dropzone ${items.length > 0 ? 'compact' : ''} ${isDragOver ? 'active' : ''} ${recentUpload ? 'recent-upload' : ''}`}
-        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-        onDragLeave={() => setIsDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setIsDragOver(false);
-          if (e.dataTransfer.files) addFiles(e.dataTransfer.files);
-        }}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          style={{ display: 'none' }} 
-          multiple 
-          accept="image/*,.heic,.heif,.avif"
-          onChange={(e) => {
-            if (e.target.files) addFiles(e.target.files);
-            e.target.value = '';
+        {/* Dropzone */}
+        <div 
+          className={`dropzone ${items.length > 0 ? 'dropzone--compact' : ''} ${isDragOver ? 'dropzone--active' : ''} ${recentUpload ? 'dropzone--pulse' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+          onDragLeave={() => setIsDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragOver(false);
+            if (e.dataTransfer.files) addFiles(e.dataTransfer.files);
           }}
-        />
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            style={{ display: 'none' }} 
+            multiple 
+            accept="image/*,.heic,.heif,.avif"
+            onChange={(e) => {
+              if (e.target.files) addFiles(e.target.files);
+              e.target.value = '';
+            }}
+          />
 
-        {items.length === 0 ? (
-          <>
-            <div className="drop-icon-wrap">
-              <FolderDown size={28} />
-            </div>
-            <div className="drop-title">Drag & drop your images here, or click to browse</div>
-            <div className="drop-desc">Supports JPG, PNG, WebP, HEIC, AVIF, and more with zero quality loss.</div>
-            <button type="button" className="drop-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-              <Plus size={16} />
-              <span>Select Images</span>
-            </button>
-            <div className="paste-hint">
-              or press <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> anywhere to paste from clipboard
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="compact-content">
-              <div className="compact-icon">
-                <FolderDown size={22} />
+          {items.length === 0 ? (
+            <>
+              <div className="dropzone__icon">
+                <FolderDown size={28} />
               </div>
-              <div className="compact-text">
-                <h4>Add more images to clean</h4>
-                <p>Drag & drop files or click to add (supports JPG, PNG, WebP · Ctrl+V)</p>
-              </div>
-            </div>
-            <button type="button" className="compact-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-              <Plus size={15} />
-              <span>Browse Files</span>
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Options Bar with Clear Friendly Explanations */}
-      <div className="options-bar">
-        <div className="options-group">
-          <label className="option-item">
-            <input 
-              type="checkbox" 
-              checked={keepICC} 
-              onChange={(e) => handleKeepICCChange(e.target.checked)} 
-            />
-            <div className="option-content">
-              <div className="option-title-row">
-                <span className="option-title">Keep original colors</span>
-                <span className="badge-pill badge-recommended">Recommended</span>
-              </div>
-              <span className="option-desc">Preserves display color profile (ICC)</span>
-            </div>
-          </label>
-
-          <label className="option-item">
-            <input 
-              type="checkbox" 
-              checked={unique} 
-              onChange={(e) => handleUniqueChange(e.target.checked)} 
-            />
-            <div className="option-content">
-              <div className="option-title-row">
-                <span className="option-title">Make each image unique</span>
-                <span className="badge-pill badge-optional">Optional</span>
-              </div>
-              <span className="option-desc">Invisible pixel tweaks to alter duplicate file hash</span>
-            </div>
-          </label>
-        </div>
-
-        <div className="option-select-wrap">
-          <label>File Naming:</label>
-          <select value={nameMode} onChange={(e) => setNameMode(e.target.value)}>
-            <option value="suffix">photo-clean.jpg (Adds -clean suffix)</option>
-            <option value="keep">photo.jpg (Keep original name)</option>
-            <option value="rename">image-001.jpg (Sequential numbering)</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Batch Summary Bar */}
-      {items.length > 0 && (
-        <div className="batch-bar">
-          <div className="batch-stats">
-            <CheckCircle2 size={18} color="var(--accent)" />
-            <span>
-              <strong>{doneCount}</strong> of {items.length} image{items.length > 1 ? 's' : ''} cleaned
-              {processingCount > 0 && ` · cleaning ${processingCount} in progress…`}
-            </span>
-          </div>
-          <div className="batch-actions">
-            <button className="btn-secondary" onClick={handleClearAll}>
-              <RefreshCw size={14} />
-              <span>Start over</span>
-            </button>
-            {/* Show ZIP only when there are multiple images */}
-            {doneCount > 1 && (
-              <button className="btn-primary" disabled={doneCount === 0 || processingCount > 0} onClick={handleDownloadAll}>
-                <Download size={15} />
-                <span>Download All ({doneCount}) as ZIP</span>
+              <div className="dropzone__title">Drag &amp; drop images here, or click to browse</div>
+              <div className="dropzone__desc">JPG, PNG, WebP, HEIC, AVIF — zero quality loss</div>
+              <button type="button" className="dropzone__btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+                <Plus size={16} />
+                <span>Select Images</span>
               </button>
-            )}
+              <div className="dropzone__hint">
+                or press <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> to paste from clipboard
+              </div>
+            </>
+          ) : (
+            <div className="dropzone__compact-row">
+              <div className="dropzone__compact-left">
+                <div className="dropzone__compact-icon">
+                  <FolderDown size={20} />
+                </div>
+                <div>
+                  <h4>Add more images</h4>
+                  <p>Drag &amp; drop or click · Ctrl+V to paste</p>
+                </div>
+              </div>
+              <button type="button" className="dropzone__compact-btn" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+                <Plus size={15} />
+                <span>Browse</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Options Panel */}
+        <div className="options-panel">
+          <div className="options-panel__group">
+            <label className="option">
+              <input 
+                type="checkbox" 
+                checked={keepICC} 
+                onChange={(e) => handleKeepICCChange(e.target.checked)} 
+              />
+              <div className="option__body">
+                <div className="option__header">
+                  <span className="option__label">Keep original colors</span>
+                  <span className="pill pill--accent">Recommended</span>
+                </div>
+                <span className="option__hint">Preserves ICC color profile</span>
+              </div>
+            </label>
+
+            <label className="option">
+              <input 
+                type="checkbox" 
+                checked={unique} 
+                onChange={(e) => handleUniqueChange(e.target.checked)} 
+              />
+              <div className="option__body">
+                <div className="option__header">
+                  <span className="option__label">Make each image unique</span>
+                  <span className="pill pill--muted">Optional</span>
+                </div>
+                <span className="option__hint">Invisible pixel tweaks alter file hash</span>
+              </div>
+            </label>
+          </div>
+
+          <div className="options-panel__select">
+            <label>File Naming</label>
+            <select value={nameMode} onChange={(e) => setNameMode(e.target.value)}>
+              <option value="suffix">photo-clean.jpg</option>
+              <option value="keep">photo.jpg (original)</option>
+              <option value="rename">image-001.jpg (sequential)</option>
+            </select>
           </div>
         </div>
-      )}
 
-      {/* Image Rows List - Directly visible right below without scrolling */}
-      <div className="image-list">
-        {items.map((it, idx) => {
-          const doneList = items.filter(x => x.status === 'done');
-          const outName = generateOutputName(it, idx, doneList);
-          const aiCount = (it.out?.ai ? it.out.ai.length : 0) + (it.nameAI?.length ? 1 : 0);
+        {/* Batch Action Bar */}
+        {items.length > 0 && (
+          <div className="batch-bar">
+            <div className="batch-bar__status">
+              <CheckCircle2 size={18} color="var(--accent)" />
+              <span>
+                <strong>{doneCount}</strong> / {items.length} cleaned
+                {processingCount > 0 && ` · ${processingCount} in progress…`}
+              </span>
+            </div>
+            <div className="batch-bar__actions">
+              <button className="btn btn--ghost" onClick={handleClearAll}>
+                <RefreshCw size={14} />
+                <span>Clear</span>
+              </button>
+              {doneCount > 1 && (
+                <button className="btn btn--filled" disabled={doneCount === 0 || processingCount > 0} onClick={handleDownloadAll}>
+                  <Download size={15} />
+                  <span>Download All ({doneCount})</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
-          return (
-            <div key={it.id} className="image-card">
-              <div className="image-row-main">
-                <div className="image-thumb-wrap">
-                  <img 
-                    className="image-thumb" 
-                    src={it.url || URL.createObjectURL(it.file)} 
-                    alt="" 
-                  />
-                </div>
-                <div className="image-info">
-                  <div className="image-name">{outName}</div>
-                  <div className="image-meta-text">
-                    {it.status === 'done' 
-                      ? `${formatBytes(it.file.size)} → ${formatBytes(it.out.bytes.length)} · ${it.out.method}`
-                      : `${formatBytes(it.file.size)} · ${it.status === 'processing' ? 'Cleaning metadata…' : 'Queued'}`
-                    }
+        {/* Image Results */}
+        <div className="results">
+          {items.map((it, idx) => {
+            const outName = generateOutputName(it, idx);
+            const aiCount = (it.out?.ai ? it.out.ai.length : 0) + (it.nameAI?.length ? 1 : 0);
+
+            return (
+              <div key={it.id} className="card">
+                <div className="card__row">
+                  <div className="card__thumb">
+                    <img src={it.url || URL.createObjectURL(it.file)} alt="" />
                   </div>
-                  <div className="tags-row">
-                    {it.status === 'processing' && (
-                      <span className="tag-badge processing">
-                        <RefreshCw size={11} className="spin" />
-                        Processing...
-                      </span>
-                    )}
+                  <div className="card__info">
+                    <div className="card__name">{outName}</div>
+                    <div className="card__meta">
+                      {it.status === 'done' 
+                        ? `${formatBytes(it.file.size)} → ${formatBytes(it.out.bytes.length)} · ${it.out.method}`
+                        : `${formatBytes(it.file.size)} · ${it.status === 'processing' ? 'Cleaning…' : 'Queued'}`
+                      }
+                    </div>
+                    <div className="card__tags">
+                      {it.status === 'processing' && (
+                        <span className="tag tag--processing">
+                          <RefreshCw size={11} className="spin" />
+                          Processing
+                        </span>
+                      )}
+                      {it.status === 'done' && (
+                        <>
+                          {aiCount > 0 ? (
+                            <span className="tag tag--ai">
+                              <Sparkles size={11} />
+                              AI Found ({aiCount})
+                            </span>
+                          ) : (
+                            <span className="tag">No AI</span>
+                          )}
+                          <span className="tag">
+                            {it.out.removed.length} removed
+                          </span>
+                          {it.out.verified && (
+                            <span className="tag tag--clean">
+                              <CheckCircle2 size={11} />
+                              Clean
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {it.status === 'error' && (
+                        <span className="tag tag--error">
+                          <AlertCircle size={11} />
+                          {it.error}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="card__actions">
                     {it.status === 'done' && (
                       <>
-                        {aiCount > 0 ? (
-                          <span className="tag-badge ai">
-                            <Sparkles size={11} />
-                            AI Traces Found ({aiCount})
-                          </span>
-                        ) : (
-                          <span className="tag-badge">No AI Traces</span>
-                        )}
-                        <span className="tag-badge">
-                          {it.out.removed.length} item{it.out.removed.length === 1 ? '' : 's'} removed
-                        </span>
-                        {it.out.verified && (
-                          <span className="tag-badge clean">
-                            <CheckCircle2 size={11} />
-                            Clean
-                          </span>
-                        )}
+                        <button 
+                          className="btn btn--sm" 
+                          onClick={() => setItems(prev => prev.map(x => x.id === it.id ? { ...x, open: !x.open } : x))}
+                        >
+                          {it.open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                          <span className="btn__label-desktop">{it.open ? 'Hide' : 'Inspect'}</span>
+                        </button>
+                        <button className="btn btn--sm" onClick={() => handleCopy(it)}>
+                          <Copy size={13} />
+                          <span className="btn__label-desktop">{copiedId === it.id ? 'Copied!' : 'Copy'}</span>
+                        </button>
+                        <a className="btn btn--sm btn--accent" href={it.url} download={outName}>
+                          <Download size={13} />
+                          <span className="btn__label-desktop">Download</span>
+                        </a>
                       </>
                     )}
-                    {it.status === 'error' && (
-                      <span className="tag-badge error">
-                        <AlertCircle size={11} />
-                        {it.error}
-                      </span>
-                    )}
+                    <button className="btn btn--icon-only btn--danger-hover" title="Remove" onClick={() => removeItem(it.id)}>
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
 
-                <div className="image-actions">
-                  {it.status === 'done' && (
-                    <>
-                      <button 
-                        className="action-btn-sm" 
-                        onClick={() => setItems(prev => prev.map(x => x.id === it.id ? { ...x, open: !x.open } : x))}
-                      >
-                        {it.open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                        <span>{it.open ? 'Hide' : 'Inspect'}</span>
-                      </button>
-                      <button 
-                        className="action-btn-sm" 
-                        onClick={() => handleCopy(it)}
-                      >
-                        <Copy size={13} />
-                        <span>{copiedId === it.id ? 'Copied!' : 'Copy'}</span>
-                      </button>
-                      <a 
-                        className="action-btn-sm" 
-                        style={{ background: 'linear-gradient(135deg, #06b6d4, #10b981)', color: '#0c0e14', borderColor: 'transparent', fontWeight: 700 }}
-                        href={it.url} 
-                        download={outName}
-                      >
-                        <Download size={13} />
-                        <span>Download</span>
-                      </a>
-                    </>
-                  )}
-                  <button 
-                    className="icon-btn" 
-                    title="Remove"
-                    onClick={() => removeItem(it.id)}
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Expandable Inspection Details */}
-              {it.open && it.out && (
-                <div className="image-details">
-                  <div className="detail-col">
-                    <h4>What Was Detected</h4>
-                    <ul>
-                      {it.out.ai && it.out.ai.length > 0 ? (
-                        it.out.ai.map((d, i) => (
-                          <li key={i}>
-                            <strong>{d.name}</strong>
-                            {d.evidence.map((ev, k) => (
-                              <span key={k} className="detail-evidence">{ev}</span>
-                            ))}
+                {/* Expandable Details */}
+                {it.open && it.out && (
+                  <div className="card__details">
+                    <div className="detail-col">
+                      <h4>Detected</h4>
+                      <ul>
+                        {it.out.ai && it.out.ai.length > 0 ? (
+                          it.out.ai.map((d, i) => (
+                            <li key={i}>
+                              <strong>{d.name}</strong>
+                              {d.evidence.map((ev, k) => (
+                                <span key={k} className="evidence">{ev}</span>
+                              ))}
+                            </li>
+                          ))
+                        ) : (
+                          <li>No AI tags found</li>
+                        )}
+                        {it.nameAI && it.nameAI.length > 0 && (
+                          <li>
+                            <strong>Filename: {it.nameAI.join(', ')}</strong>
+                            <span className="evidence">{it.file.name}</span>
                           </li>
-                        ))
-                      ) : (
-                        <li>No AI tags found</li>
-                      )}
-                      {it.nameAI && it.nameAI.length > 0 && (
-                        <li>
-                          <strong>Filename matches {it.nameAI.join(', ')}</strong>
-                          <span className="detail-evidence">{it.file.name}</span>
-                        </li>
-                      )}
-                    </ul>
+                        )}
+                      </ul>
+                    </div>
+                    <div className="detail-col">
+                      <h4>Removed</h4>
+                      <ul>
+                        {it.out.removed.map((r, i) => (
+                          <li key={i}>
+                            <strong>{r.label}</strong>
+                            {r.bytes ? ` (${formatBytes(r.bytes)})` : ''}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="detail-col">
+                      <h4>Kept</h4>
+                      <ul>
+                        {it.out.kept.map((k, i) => (
+                          <li key={i}>✓ {k}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-
-                  <div className="detail-col">
-                    <h4>What Was Removed</h4>
-                    <ul>
-                      {it.out.removed.map((r, i) => (
-                        <li key={i}>
-                          <strong>{r.label}</strong>
-                          {r.bytes ? ` (${formatBytes(r.bytes)})` : ''}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="detail-col">
-                    <h4>What Was Kept</h4>
-                    <ul>
-                      {it.out.kept.map((k, i) => (
-                        <li key={i}>✓ {k}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* FAQ Accordion */}
-      <section className="faq-sec">
-        <h3>Frequently Asked Questions</h3>
-        <div className="faq-list">
-          {[
-            {
-              q: "Does this tool upload my images anywhere?",
-              a: "No. Everything runs 100% inside your browser using client-side binary parsing and Canvas APIs. Your images never touch any server, and the tool works completely offline as an installable PWA."
-            },
-            {
-              q: "Does removing metadata reduce image quality?",
-              a: "No. For JPG, PNG, and WebP, the cleaning is completely lossless. The actual pixel data is left untouched; only the metadata header chunks (EXIF, XMP, C2PA, Prompts) are stripped out."
-            },
-            {
-              q: "Can it remove invisible pixel watermarks like Google SynthID?",
-              a: "No. SynthID and similar technologies embed microscopic statistical watermarks directly into the pixel values themselves. Because that is image data rather than metadata, no metadata remover can take it out without degrading the image."
-            },
-            {
-              q: "What does 'Make each image unique' do?",
-              a: "It injects imperceptible noise into approximately 25% of visible pixels (changing a color channel value by ±1). This completely alters the cryptographic hash (SHA-256 / MD5) to prevent duplicate detection while remaining invisible to the human eye."
-            }
-          ].map((item, idx) => (
-            <div key={idx} className="faq-item">
-              <button 
-                type="button" 
-                className="faq-question"
-                onClick={() => setFaqOpen(faqOpen === idx ? null : idx)}
-              >
-                <span>{item.q}</span>
-                {faqOpen === idx ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-              {faqOpen === idx && (
-                <div className="faq-answer">{item.a}</div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
-      </section>
 
-      {/* Footer / Copyright Section */}
+        {/* FAQ */}
+        <section className="faq">
+          <h3 className="faq__heading">Frequently Asked Questions</h3>
+          <div className="faq__list">
+            {[
+              {
+                q: "Does this tool upload my images anywhere?",
+                a: "No. Everything runs 100% inside your browser using client-side binary parsing. Your images never touch any server, and the tool works completely offline as a PWA."
+              },
+              {
+                q: "Does removing metadata reduce image quality?",
+                a: "No. For JPG, PNG, and WebP, the cleaning is completely lossless. Pixel data is untouched — only metadata chunks (EXIF, XMP, C2PA) are stripped."
+              },
+              {
+                q: "Can it remove pixel watermarks like SynthID?",
+                a: "No. SynthID embeds watermarks directly into pixel values. No metadata remover can remove that without degrading the image."
+              },
+              {
+                q: "What does 'Make each image unique' do?",
+                a: "It injects imperceptible noise into ~25% of pixels (±1 color channel), completely altering the file hash while remaining invisible to the eye."
+              }
+            ].map((item, idx) => (
+              <div key={idx} className="faq__item">
+                <button 
+                  type="button" 
+                  className="faq__q"
+                  onClick={() => setFaqOpen(faqOpen === idx ? null : idx)}
+                >
+                  <span>{item.q}</span>
+                  {faqOpen === idx ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {faqOpen === idx && (
+                  <div className="faq__a">{item.a}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {/* ==================== Footer (Material 3 Minimalist) ==================== */}
       <footer className="footer">
-        <div className="footer-left">
+        <div className="footer__brand-wrap">
           <a 
             href="https://www.devwonderbd.com" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="footer-brand"
+            className="footer__dw-link"
             title="Dev Wonder - Simplifying Tech"
           >
-            <img src={devWonderEmblem} alt="Dev Wonder" className="footer-devwonder-logo" />
+            <img src={devWonderEmblem} alt="Dev Wonder" className="footer__dw-logo" />
           </a>
-          <div className="footer-meta">
-            <p className="footer-copyright">
-              © {new Date().getFullYear()} Dev Wonder · Simplifying Tech
-            </p>
-            <div className="footer-badges">
-              <span className="footer-version-badge">v{currentVersion}</span>
-              <span className="footer-tag">100% Client-Side</span>
-            </div>
-          </div>
+          <p className="footer__copyright">
+            © {new Date().getFullYear()} Dev Wonder · Simplifying Tech
+          </p>
         </div>
-        <div className="footer-right">
-          <a 
-            href="https://github.com/DevWonderBD/ai-metadata-remover" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="footer-github-btn"
-          >
-            <Star size={14} fill="currentColor" />
-            <span>Star on GitHub</span>
+
+        <nav className="footer__nav" aria-label="Footer links">
+          <a href="https://github.com/DevWonderBD/ai-metadata-remover" target="_blank" rel="noopener noreferrer">
+            <GithubIcon size={13} />
+            <span>GitHub</span>
           </a>
-          <div className="footer-nav">
-            <a href="https://github.com/DevWonderBD/ai-metadata-remover" target="_blank" rel="noopener noreferrer">
-              GitHub
-            </a>
-            <a href="https://github.com/DevWonderBD/ai-metadata-remover/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
-              MIT License
-            </a>
-            <a href="https://github.com/DevWonderBD/ai-metadata-remover/issues" target="_blank" rel="noopener noreferrer">
-              Report Issue
-            </a>
-          </div>
+          <a href="https://github.com/DevWonderBD/ai-metadata-remover/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
+            <ExternalLink size={12} />
+            <span>MIT License</span>
+          </a>
+          <a href="https://github.com/DevWonderBD/ai-metadata-remover/issues" target="_blank" rel="noopener noreferrer">
+            <ExternalLink size={12} />
+            <span>Report Issue</span>
+          </a>
+        </nav>
+
+        {/* Version Badge is strictly at the very bottom */}
+        <div className="footer__version-wrap">
+          <span className="footer__version-badge">v{currentVersion}</span>
         </div>
       </footer>
 
-      {/* Sleek Install Guide / Status Modal */}
+      {/* ==================== Install Guide Modal ==================== */}
       {showInstallModal && (
-        <div className="modal-overlay" onClick={() => setShowInstallModal(false)}>
-          <div className="install-modal" onClick={e => e.stopPropagation()}>
-            <div className="install-modal-header">
-              <div className="install-modal-title">
-                <img src={appIcon} alt="App Icon" className="install-modal-logo" />
+        <div className="modal-backdrop" onClick={() => setShowInstallModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal__header">
+              <div className="modal__title-row">
+                <img src={appIcon} alt="" className="modal__icon" />
                 <div>
                   <h3>AI Metadata Remover</h3>
                   <p>Dev Wonder Open Source</p>
                 </div>
               </div>
-              <button 
-                type="button" 
-                className="install-modal-close"
-                onClick={() => setShowInstallModal(false)}
-                title="Close"
-              >
+              <button type="button" className="modal__close" onClick={() => setShowInstallModal(false)}>
                 <X size={18} />
               </button>
             </div>
 
             {isInstalled || isStandalone ? (
-              <div className="install-modal-body" style={{ textAlign: 'center', padding: '24px 20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--accent-soft)', border: '1px solid var(--accent-border)', display: 'grid', placeItems: 'center' }}>
-                    <CheckCircle2 size={30} color="var(--accent)" />
-                  </div>
+              <div className="modal__body modal__body--center">
+                <div className="modal__success-icon">
+                  <CheckCircle2 size={30} color="var(--accent)" />
                 </div>
-                <h4 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: 8 }}>
-                  App Already Installed on this Device!
-                </h4>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: 380, margin: '0 auto 16px' }}>
-                  The app is already installed. You can open it directly from your phone's <strong>App Drawer</strong> or your computer's <strong>Application Launcher</strong>.
-                </p>
-                <div style={{ background: 'var(--bg-card-subtle)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-subtle)', lineHeight: 1.5, textAlign: 'left' }}>
-                  💡 <strong>Want to reinstall fresh?</strong> Simply uninstall the older app from your phone's app drawer or browser, then reload this page to get the fresh install prompt.
+                <h4>Already Installed!</h4>
+                <p>Open from your App Drawer or Application Launcher.</p>
+                <div className="modal__hint-box">
+                  💡 <strong>Reinstall?</strong> Uninstall the existing app first, then reload this page.
                 </div>
               </div>
             ) : (
-              <div className="install-modal-body">
-                <div className="install-step-card">
-                  <Monitor size={22} className="install-step-icon" />
-                  <div className="install-step-info">
+              <div className="modal__body">
+                <div className="modal__step">
+                  <Monitor size={20} className="modal__step-icon" />
+                  <div>
                     <h4>Desktop (Chrome / Brave / Edge)</h4>
-                    <p>Click the <strong>Install / Open App icon (⊕ / 📥)</strong> in your browser's address bar, or click browser menu ⋮ ➔ <em>Install AI Metadata Remover</em>.</p>
+                    <p>Click the <strong>Install icon (⊕ / 📥)</strong> in the address bar, or browser menu → <em>Install AI Metadata Remover</em>.</p>
                   </div>
                 </div>
-
-                <div className="install-step-card">
-                  <Smartphone size={22} className="install-step-icon" />
-                  <div className="install-step-info">
+                <div className="modal__step">
+                  <Smartphone size={20} className="modal__step-icon" />
+                  <div>
                     <h4>iPhone &amp; iPad (Safari)</h4>
-                    <p>Tap the <strong>Share</strong> button at bottom ➔ scroll down and tap <strong>Add to Home Screen (+)</strong>.</p>
+                    <p>Tap <strong>Share</strong> → scroll down → <strong>Add to Home Screen (+)</strong>.</p>
                   </div>
                 </div>
-
-                <div className="install-step-card">
-                  <Smartphone size={22} className="install-step-icon" />
-                  <div className="install-step-info">
+                <div className="modal__step">
+                  <Smartphone size={20} className="modal__step-icon" />
+                  <div>
                     <h4>Android (Chrome / Brave)</h4>
-                    <p>Tap the <strong>3-dots menu (⋮)</strong> at top right ➔ tap <strong>Install app</strong>.</p>
+                    <p>Tap <strong>⋮ menu</strong> → <strong>Install app</strong>.</p>
                   </div>
                 </div>
               </div>
             )}
 
-            <div className="install-modal-footer">
-              <button 
-                type="button" 
-                className="install-modal-gotit-btn"
-                onClick={() => setShowInstallModal(false)}
-              >
+            <div className="modal__footer">
+              <button type="button" className="btn btn--filled" onClick={() => setShowInstallModal(false)}>
                 Got it
               </button>
             </div>

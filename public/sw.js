@@ -3,7 +3,7 @@
  * Dev Wonder Open Source Initiative
  */
 
-const CACHE_NAME = 'devwonder-aimr-v4';
+const CACHE_NAME = 'devwonder-aimr-v5';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
