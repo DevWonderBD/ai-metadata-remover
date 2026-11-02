@@ -127,3 +127,20 @@ html, body {
 .lottie-pulse-slow {
   animation: lottiePulseSlow 2s ease-in-out infinite;
 }
+
+/* FAQ Smooth Accordion Grid Transition */
+.faq-grid-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease-out;
+}
+
+.faq-grid-collapse.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.faq-grid-collapse > div {
+  overflow: hidden;
+}

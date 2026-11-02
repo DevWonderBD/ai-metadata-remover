@@ -1036,14 +1036,25 @@ export default function App() {
           })}
         </div>
 
-        {/* FAQ */}
-        <section className="mt-14 max-w-3xl mx-auto w-full">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 text-center mb-4">Frequently Asked Questions</h3>
-          <div className="flex flex-col gap-2.5">
+        {/* FAQ Section */}
+        <section className="mt-16 max-w-3xl mx-auto w-full">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25 mb-2.5">
+              <span>FAQ</span>
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+              Frequently Asked Questions
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
+              Everything you need to know about privacy, image cleaning, and how it works.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
             {[
               {
                 q: "Does this tool upload my photos to any server?",
-                a: "Never. Everything runs 100% inside your own browser. Your photos never leave your device, and nobody else can see them."
+                a: "Never. Everything runs 100% inside your own browser using client-side binary parsing. Your photos never leave your device, and nobody else can see them."
               },
               {
                 q: "Does removing metadata reduce photo quality?",
@@ -1059,25 +1070,55 @@ export default function App() {
               },
               {
                 q: "Can I use this app without internet (offline)?",
-                a: "Yes! Click the 'Install' button at the top to save it to your phone or computer. Once installed, it works fully offline anytime, anywhere."
+                a: "Yes! Click the 'Install App' button at the top to save it to your phone or computer. Once installed, it works fully offline anytime, anywhere."
               }
-            ].map((item, idx) => (
-              <div key={idx} className="bg-white dark:bg-[#11162e] border border-slate-200 dark:border-[#1e264a] rounded-2xl overflow-hidden shadow-sm hover:border-sky-500/30 transition-colors">
-                <button 
-                  type="button" 
-                  className="w-full px-4 py-3.5 flex justify-between items-center text-left text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-sky-500 gap-3 cursor-pointer"
-                  onClick={() => setFaqOpen(faqOpen === idx ? null : idx)}
+            ].map((item, idx) => {
+              const isOpen = faqOpen === idx;
+              return (
+                <div 
+                  key={idx} 
+                  className={`bg-white dark:bg-[#11162e] rounded-2xl border transition-all duration-300 overflow-hidden shadow-sm ${
+                    isOpen 
+                      ? 'border-sky-500/50 shadow-md shadow-sky-500/5 ring-1 ring-sky-500/20' 
+                      : 'border-slate-200 dark:border-[#1e264a] hover:border-sky-500/35 hover:shadow'
+                  }`}
                 >
-                  <span>{item.q}</span>
-                  {faqOpen === idx ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-                {faqOpen === idx && (
-                  <div className="px-4 pb-3.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-[#141a38] pt-2.5">
-                    {item.a}
+                  <button 
+                    type="button" 
+                    className="w-full px-5 py-4 flex items-center justify-between text-left gap-3.5 cursor-pointer select-none group"
+                    onClick={() => setFaqOpen(isOpen ? null : idx)}
+                    aria-expanded={isOpen}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={`font-mono text-[11px] font-bold px-2 py-0.5 rounded-md transition-colors ${
+                        isOpen 
+                          ? 'bg-sky-500 text-white' 
+                          : 'bg-slate-100 dark:bg-[#141a38] text-slate-500 group-hover:text-sky-500'
+                      }`}>
+                        0{idx + 1}
+                      </span>
+                      <span className={`text-sm sm:text-base font-semibold transition-colors truncate ${
+                        isOpen ? 'text-sky-600 dark:text-sky-400' : 'text-slate-900 dark:text-slate-100 group-hover:text-sky-500'
+                      }`}>
+                        {item.q}
+                      </span>
+                    </div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isOpen ? 'bg-sky-500/10 text-sky-500 rotate-180' : 'bg-slate-100 dark:bg-[#141a38] text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+                    }`}>
+                      <ChevronDown size={16} />
+                    </div>
+                  </button>
+                  <div className={`faq-grid-collapse ${isOpen ? 'open' : ''}`}>
+                    <div>
+                      <div className="px-5 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-[#141a38] pt-3">
+                        {item.a}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </section>
       </main>
